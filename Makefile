@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2023/12/27 00:42:37 by jodufour         ###   ########.fr        #
+#    Updated: 2023/12/29 01:53:35 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@
 #              COMMANDS              #
 ######################################
 AS		=	nasm
-LINK	=	clang
+LINK	=	ar rcs
 MKDIR	=	mkdir -p
 RM		=	rm -rf
 
@@ -33,7 +33,8 @@ PRV_DIR	=	private
 ######################################
 #            SOURCE FILES            #
 ######################################
-SRC		=	
+SRC		=	\
+			ft_strlen.s
 
 ######################################
 #            OBJECT FILES            #
@@ -56,7 +57,7 @@ endif
 #                RULES                #
 #######################################
 ${NAME}: ${OBJ}
-	${LINK} ${OBJ} ${LDFLAGS} ${OUTPUT_OPTION}
+	${LINK} $@ $^
 
 all: ${NAME}
 
