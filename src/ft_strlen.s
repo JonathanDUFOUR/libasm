@@ -1,9 +1,10 @@
+global ft_strlen
+
 section .data
 
 section .bss
 
 section .text
-	global ft_strlen
 
 ; Calculates the length of a nul-terminated string
 ;
