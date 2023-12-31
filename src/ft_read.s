@@ -7,7 +7,7 @@ section .bss
 
 section .text
 
-; Reads N bytes from a file descriptor and store them in a buffer.
+; Reads N bytes from a file descriptor into a buffer.
 ; In case of any error, sets errno properly.
 ;
 ; Parameters
