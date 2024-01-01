@@ -9,8 +9,8 @@ section .text
 ; Both strings must be null-terminated.
 ;
 ; Parameters
-; rdi: The address of the first string to compare
-; rsi: The address of the second string to compare
+; rdi: the address of the first string to compare
+; rsi: the address of the second string to compare
 ;
 ; Return
 ; rax:
@@ -18,11 +18,11 @@ section .text
 ; 	- a negative value if the first string is less than the second
 ; 	- a positive value if the first string is greater than the second
 ft_strcmp:
-	mov ah, byte [rdi]
-	cmp ah, byte [rsi]
+	mov al, byte [rdi]
+	cmp al, byte [rsi]
 	jg .positive_return
 	jl .negative_return
-	test ah, ah
+	test al, al
 	jz .zero_return
 	inc rdi
 	inc rsi

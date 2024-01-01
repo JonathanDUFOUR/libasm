@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/01/01 05:58:08 by jodufour         ###   ########.fr        #
+#    Updated: 2024/01/01 17:31:57 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ PRV_DIR	=	private
 SRC		=	\
 			ft_read.s	\
 			ft_strcmp.s	\
+			ft_strcpy.s	\
 			ft_strlen.s	\
 			ft_write.s
 
