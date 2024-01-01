@@ -5,7 +5,6 @@ section .data
 section .bss
 
 section .text
-
 ; Calculates the length of a nul-terminated string
 ;
 ; Parameters

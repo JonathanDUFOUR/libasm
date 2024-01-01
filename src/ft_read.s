@@ -6,7 +6,6 @@ section .data
 section .bss
 
 section .text
-
 ; Reads N bytes from a file descriptor into a buffer.
 ; In case of any error, sets errno properly.
 ;
@@ -18,15 +17,15 @@ section .text
 ; Return
 ; rax: the number of bytes read, or -1 if an error occurred
 ft_read:
-	mov rax, 0	; sys_read
+	xor rax, rax	; sys_read
 	syscall
-	cmp rax, 0
-	jge .return
+	test rax, rax
+	jns .return
 .error:
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
-	mov rax, -1
+	or rax, -1
 .return:
 	ret

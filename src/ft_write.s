@@ -6,7 +6,6 @@ section .data
 section .bss
 
 section .text
-
 ; Writes N bytes from a buffer into a file descriptor.
 ; In case of any error, sets errno properly.
 ;
@@ -20,13 +19,13 @@ section .text
 ft_write:
 	mov rax, 1	; sys_write
 	syscall
-	cmp rax, 0
-	jge .return
+	test rax, rax
+	jns .return
 .error:
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
-	mov rax, -1
+	or rax, -1
 .return:
 	ret
