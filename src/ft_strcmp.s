@@ -6,33 +6,33 @@ section .bss
 
 section .text
 ; Compares two strings.
-; Both strings must be null-terminated.
+; Both strings are assumed to be null-terminated.
 ;
 ; Parameters
-; rdi: the address of the first string to compare
-; rsi: the address of the second string to compare
+; rdi: the address of the first string to compare. (assumed to be a valid address)
+; rsi: the address of the second string to compare. (assumed to be a valid address)
 ;
 ; Return
 ; rax:
-; 	- 0 if the strings are equal
-; 	- a negative value if the first string is less than the second
-; 	- a positive value if the first string is greater than the second
+; 	- 0 if the strings are equal.
+; 	- a negative value if the first string is less than the second.
+; 	- a positive value if the first string is greater than the second.
 ft_strcmp:
 	mov al, byte [rdi]
 	cmp al, byte [rsi]
-	jg .positive_return
-	jl .negative_return
+	jg .return_positive
+	jl .return_negative
 	test al, al
-	jz .zero_return
+	jz .return_zero
 	inc rdi
 	inc rsi
 	jmp ft_strcmp
-.negative_return:
+.return_negative:
 	or rax, -1
 	ret
-.positive_return:
+.return_positive:
 	mov rax, 1
 	ret
-.zero_return:
+.return_zero:
 	xor rax, rax
 	ret

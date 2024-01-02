@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/01/01 17:31:57 by jodufour         ###   ########.fr        #
+#    Updated: 2024/01/02 04:05:16 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -37,6 +37,7 @@ SRC		=	\
 			ft_read.s	\
 			ft_strcmp.s	\
 			ft_strcpy.s	\
+			ft_strdup.s	\
 			ft_strlen.s	\
 			ft_write.s
 

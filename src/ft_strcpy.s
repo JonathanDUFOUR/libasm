@@ -6,16 +6,16 @@ section .bss
 
 section .text
 ; Copy a string to another string.
-; The source string must be null-terminated.
-; The destination string must be large enough
+; The source string is assumed to be null-terminated.
+; The destination string is assumed to be large enough
 ; to hold the source string, including its null terminator.
 ;
 ; Parameters:
-; rdi: the address of the destination string to copy to
-; rsi: the address of the source string to copy from
+; rdi: the address of the destination string to copy to. (assumed to be a valid address)
+; rsi: the address of the source string to copy from. (assumed to be a valid address)
 ;
 ; Return:
-; rax: the address of the destination string
+; rax: the address of the destination string.
 ft_strcpy:
 	mov rax, rdi
 .loop:
