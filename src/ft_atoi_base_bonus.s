@@ -1,6 +1,7 @@
 global ft_atoi_base
 
 section .data
+	arr times 256 db 0xff
 
 section .bss
 
@@ -19,49 +20,34 @@ section .text
 ; - the parsed integer value if the base is valid.
 ; - 0 otherwise.
 ft_atoi_base:
-; check base
-	push rdi
-	mov rax, rsi
-.outer_loop:
-	mov cl, [rax]
-	test cl, cl
-	jz .end_of_outer_loop
-; check for invalid characters
-	mov ch, cl
-	sub ch, 0x09
-	cmp ch, 5
-	jb .ret_invalid_base
-	cmp cl, 0x20
-	je .ret_invalid_base
-	mov ch, cl
-	sub ch, 0x2a
-	cmp ch, 2
-	jb .ret_invalid_base
-	cmp cl, 0x2d
-	je .ret_invalid_base
-	cmp cl, 0x2f
-	je .ret_invalid_base
-	mov rdi, rax
-.inner_loop:
-; check for duplicates
-	inc rdi
-	mov ch, [rdi]
-	test ch, ch
-	jz .end_of_inner_loop
-	cmp cl, ch
-	je .ret_invalid_base
-	jmp .inner_loop
-.end_of_inner_loop:
-	inc rax
-	jmp .outer_loop
-.end_of_outer_loop:
-; check for base length
-	sub rax, rsi
-	cmp rax, 2
-	jl .ret_invalid_base
-	pop rdi
-; parse string
-; TODO
+; check if the base is valid + save the values of each digit of the base
+	mov rax, 0xac0100003e00
+	xor dx, dx
+	xor cl, cl
+.loop0:
+; check if the end of string has been reached
+	mov dl, [rsi + cl]
+	test dl, dl
+	jz .end_of_loop
+; check if the current character is any of `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
+	bt rax, dx
+	jc .ret_invalid_base
+; check if the current character has already been encountered
+	cmp [arr + dl], 0xff
+	jne .ret_invalid_base
+; save the value as a digit of the current character
+	mov [arr + dl], cl
+	inc cl
+	jmp .loop0
+.end_of_loop0:
+; check if the base is at least 2 characters long
+	and cl, 0xfffe
+	jz .ret_invalid_base
+; parse the string
+; TODO: set registers as needed before entering the loop
+.loop1:
+; TODO: parse the string
+.end_of_loop1:
 .ret:
 	ret
 .ret_invalid_base:
