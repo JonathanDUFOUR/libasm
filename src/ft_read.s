@@ -21,12 +21,12 @@ ft_read:
 	xor rax, rax	; sys_read
 	syscall
 	test rax, rax
-	jns .return
-.error:
+	jns .ret
+; error
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
 	or rax, -1
-.return:
+.ret:
 	ret

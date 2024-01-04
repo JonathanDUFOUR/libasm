@@ -16,10 +16,11 @@ section .text
 ft_strlen:
 	mov rax, rdi
 .loop:
-	cmp byte [rax], 0
-	je .end
+	mov cl, [rax]
+	test cl, cl
+	jz .ret
 	inc rax
 	jmp .loop
-.end:
+.ret:
 	sub rax, rdi
 	ret

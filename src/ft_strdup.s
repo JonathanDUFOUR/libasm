@@ -18,17 +18,17 @@ section .text
 ; Return:
 ; rax: the address of the newly allocated string, or NULL in case of error.
 ft_strdup:
-.reserve:
+; reserve
 	push rdi
 	call ft_strlen
 	inc rax
 	mov rdi, rax
 	call malloc wrt ..plt
 	test rax, rax
-	jz .return
-.copy:
+	jz .ret
+; copy
 	mov rdi, rax
 	pop rsi
 	call ft_strcpy
-.return:
+.ret:
 	ret
