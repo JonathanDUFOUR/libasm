@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/01/03 17:00:48 by jodufour         ###   ########.fr        #
+#    Updated: 2024/01/09 17:09:11 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -42,17 +42,18 @@ SRC			=	\
 				ft_strlen.s	\
 				ft_write.s
 SRC_BONUS	=	\
-				ft_atoi_base_bonus.s		\
-				ft_list_remove_if_bonus.s	\
-				ft_list_push_front_bonus.s	\
-				ft_list_size_bonus.s		\
-				ft_list_sort_bonus.s
+				ft_atoi_base.s			\
+				ft_list_remove_if.s		\
+				ft_list_push_front.s	\
+				ft_list_size.s			\
+				ft_list_sort.s
 
 ######################################
 #            OBJECT FILES            #
 ######################################
 OBJ			=	${SRC:.s=.o}
 OBJ			:=	${addprefix ${OBJ_DIR}/, ${OBJ}}
+
 OBJ_BONUS	=	${SRC_BONUS:.s=.o}
 OBJ_BONUS	:=	${addprefix ${OBJ_DIR}/, ${OBJ_BONUS}}
 
@@ -70,17 +71,18 @@ endif
 #######################################
 #                RULES                #
 #######################################
-.PHONY: bonus all clean fclean re fre
+.PHONY: all bonus clean fclean re fre
 
 ${NAME}: ${OBJ}
 	${AR} $@ $^
 
 ${NAME_BONUS}: ${OBJ_BONUS}
 	${AR} $@ $^
-
-bonus: ${NAME_BONUS}
+	${AR} ${NAME} $^
 
 all: ${NAME} ${NAME_BONUS}
+
+bonus: ${NAME_BONUS}
 
 -include ${DEP}
 
