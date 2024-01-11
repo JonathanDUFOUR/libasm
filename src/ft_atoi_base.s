@@ -66,7 +66,7 @@ ft_atoi_base:
 	jmp .loop1
 .end_of_loop1:
 ; 1.1 compute the sign
-	mov dl, [rdi]
+	xor r9b, r9b
 ; 1.1.0 check if the first non-whitespace character is a sign `%x2b / %x2d`
 	sub dl, 0x2b
 	test dl, 0xfd
@@ -78,44 +78,56 @@ ft_atoi_base:
 	inc rdi
 .skip_leading_null_digits:
 ; 1.2 skip leading null digit(s)
-	mov sil, [rsi]
-.loop2:
 	mov dl, [rdi]
+	mov r10b, [rsi]
+.loop2:
 ; 1.2.0 check if the end of string has been reached
 	test dl, dl
 	jz .ret_zero
 ; 1.2.1 check if the current character is the null digit
-	cmp dl, sil
+	cmp dl, r10b
 	jne .end_of_loop2
 ; 1.2.2 step to the next character
 	inc rdi
+	mov dl, [rdi]
 	jmp .loop2
 .end_of_loop2:
 ; 1.3 compute the significant digits
 	xor rax, rax
-	xor esi, esi
+	xor r10d, r10d
 .loop3:
-	mov dl, [rdi]
 ; 1.3.0 check if the end of string has been reached
 	test dl, dl
 	jz .end_of_loop3
 ; 1.3.1 get + check the value as a digit of the current character
-	mov sil, [r8 + rdx]		; REMIND: why can't we just do `mov sil, [arr + dl]`?
-	cmp sil, 0xff
+	mov r10b, [r8 + rdx]		; REMIND: why can't we just do `mov r10b, [arr + dl]`?
+	cmp r10b, 0xff
 	je .end_of_loop3
 ; 1.3.2 compute the current value into the final result
 	mul ecx
-	add eax, esi
+	add eax, r10d
 ; 1.3.3 step to the next character
 	inc rdi
+	mov dl, [rdi]
 	jmp .loop3
 .end_of_loop3:
 ; 1.4 apply the sign to the final result
 	test r9b, r9b
-	jz .ret
+	jz .loop4
 	neg eax
-.ret:
-	ret
+	jmp .loop4
 .ret_zero:
 	xor rax, rax
+; 2 clear the array
+.loop4:
+	mov dl, [rsi]
+; 2.0 check if the end of string has been reached
+	test dl, dl
+	jz .end_of_loop4
+; 2.1 reset the default value for the current character
+	mov byte [r8 + rdx], 0xff
+; 2.2 step to the next character
+	inc rsi
+	jmp .loop4
+.end_of_loop4:
 	ret
