@@ -1,7 +1,9 @@
 global ft_atoi_base
 
 section .data
-	arr times 256 db 0xff
+	array times 256 db 0xff
+	dbg_fmt db "Checking base...", 0xa, 0x00
+	print_dl_fmt: db "dl: [0x%.2x]", 0x0a, 0x00
 
 section .bss
 
@@ -21,8 +23,8 @@ section .text
 ; - 0 otherwise.
 ft_atoi_base:
 ; 0 check if the base is valid
-	lea r8, [rel arr]			; REMIND: why need `rel` keyword
-	mov rax, 0xac0100003e00		; the bit field that represents the invalid characters
+	lea r8, [rel array]			; REMIND: why need `rel` keyword?
+	mov rax, 0x0000ac0100003e00	; the bit field that represents the invalid characters
 	xor rdx, rdx
 	xor rcx, rcx
 ; 0.0 check if the base contains invalid character or duplicates
@@ -34,15 +36,15 @@ ft_atoi_base:
 	jz .end_of_loop0
 ; 0.0.1 check if the current character is any of `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
 	cmp dl, 0x2f
-	jg .check_duplicates
+	ja .check_duplicates
 	bt rax, rdx
 	jc .ret_zero
 .check_duplicates:
 ; 0.0.2 check if the current character has already been encountered
-	cmp byte [r8 + rdx], 0xff	; REMIND: why can't we just do `cmp byte [arr + rdx], 0xff`?
+	cmp byte [r8 + rdx], 0xff	; REMIND: why can't we just do `cmp byte [array + rdx], 0xff`?
 	jne .ret_zero
 ; 0.0.3 save the value as a digit of the current character
-	mov [r8 + rdx], cl			; REMIND: why can't we just do `mov [arr + rdx], cl`?
+	mov [r8 + rdx], cl			; REMIND: why can't we just do `mov [array + rdx], cl`?
 ; 0.0.4 step to the next character
 	inc cl
 	jmp .loop0
@@ -100,7 +102,7 @@ ft_atoi_base:
 	test dl, dl
 	jz .end_of_loop3
 ; 1.3.1 get + check the value as a digit of the current character
-	mov r10b, [r8 + rdx]		; REMIND: why can't we just do `mov r10b, [arr + dl]`?
+	mov r10b, [r8 + rdx]		; REMIND: why can't we just do `mov r10b, [array + dl]`?
 	cmp r10b, 0xff
 	je .end_of_loop3
 ; 1.3.2 compute the current value into the final result
@@ -120,14 +122,13 @@ ft_atoi_base:
 	xor rax, rax
 ; 2 clear the array
 .loop4:
-	mov dl, [rsi]
-; 2.0 check if the end of string has been reached
-	test dl, dl
+; 2.0 check if every previously set value has been cleared
+	test cl, cl
 	jz .end_of_loop4
-; 2.1 reset the default value for the current character
+; 2.1 reset the default value for the `cl`th character
+	dec cl
+	mov dl, [rsi + rcx]
 	mov byte [r8 + rdx], 0xff
-; 2.2 step to the next character
-	inc rsi
 	jmp .loop4
 .end_of_loop4:
 	ret
