@@ -2,8 +2,6 @@ global ft_atoi_base
 
 section .data
 	array times 256 db 0xff
-	dbg_fmt db "Checking base...", 0xa, 0x00
-	print_dl_fmt: db "dl: [0x%.2x]", 0x0a, 0x00
 
 section .bss
 
@@ -125,7 +123,7 @@ ft_atoi_base:
 ; 2.0 check if every previously set value has been cleared
 	test cl, cl
 	jz .end_of_loop4
-; 2.1 reset the default value for the `cl`th character
+; 2.1 reset the default value for the `cl`th characters of the base
 	dec cl
 	mov dl, [rsi + rcx]
 	mov byte [r8 + rdx], 0xff
