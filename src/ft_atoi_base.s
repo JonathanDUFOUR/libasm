@@ -16,7 +16,7 @@ section .text
 ; rsi: the address of the string to use as base. (assumed to be a valid address)
 ;
 ; Return:
-; rax:
+; eax:
 ; - the parsed integer value if the base is valid.
 ; - 0 otherwise.
 ft_atoi_base:

@@ -17,11 +17,13 @@ section .text
 ; Return
 ; rax: the number of bytes written, or -1 if an error occurred.
 ft_write:
-	mov rax, 1	; sys_write
+; call sys_write
+	mov rax, 1
 	syscall
+; check if sys_write failed
 	test rax, rax
 	jns .ret
-; error
+; handle the error
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt

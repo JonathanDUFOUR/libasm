@@ -17,8 +17,10 @@ ft_strlen:
 	mov rax, rdi
 .loop:
 	mov cl, [rax]
+; check if the end of the string has been reached
 	test cl, cl
 	jz .ret
+; step to the next character
 	inc rax
 	jmp .loop
 .ret:

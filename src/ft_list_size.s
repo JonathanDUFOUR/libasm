@@ -13,5 +13,15 @@ section .text
 ; Return:
 ; rax: the number of nodes in the list.
 ft_list_size:
-; TODO
-ret
+	xor rax, rax
+.loop:
+; check if the end of the list has been reached
+	test rdi, rdi
+	jz .ret
+; increment the counter
+	inc rax
+; step to the next node
+	mov rdi, [rdi + 8]
+	jmp .loop
+.ret:
+	ret

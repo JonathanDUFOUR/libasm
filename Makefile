@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/01/09 17:09:11 by jodufour         ###   ########.fr        #
+#    Updated: 2024/01/15 14:52:20 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -93,8 +93,7 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 clean:
 	${RM} ${OBJ_DIR} ${NAME} vgcore.*
 
-fclean:
-	${RM} ${OBJ_DIR} ${NAME} vgcore.*
+fclean: clean
 
 re: clean all
 

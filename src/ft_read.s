@@ -18,11 +18,13 @@ section .text
 ; Return
 ; rax: the number of bytes read, or -1 if an error occurred.
 ft_read:
-	xor rax, rax	; sys_read
+; call sys_read
+	xor rax, rax
 	syscall
+; check if sys_read failed
 	test rax, rax
 	jns .ret
-; error
+; handle the error
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt

@@ -19,10 +19,13 @@ section .text
 ft_strcpy:
 	mov rax, rdi
 .loop:
+; copy the current character from the source string to the destination string
 	mov cl, [rsi]
 	mov [rdi], cl
+; check if the end of the source string has been reached
 	test cl, cl
 	jz .ret
+; step to the next character
 	inc rdi
 	inc rsi
 	jmp .loop

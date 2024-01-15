@@ -13,13 +13,13 @@ section .text
 ; rsi: the address of the second string to compare. (assumed to be a valid address)
 ;
 ; Return
-; rax:
+; eax:
 ; - 0 if the strings are equal.
 ; - a negative value if the first string is less than the second.
 ; - a positive value if the first string is greater than the second.
 ft_strcmp:
-	xor rax, rax
-	xor rcx, rcx
+	xor eax, eax
+	xor ecx, ecx
 .loop:
 	mov al, [rdi]
 	mov cl, [rsi]
@@ -31,6 +31,6 @@ ft_strcmp:
 	inc rsi
 	jmp .loop
 .diff:
-	sub rax, rcx
+	sub eax, ecx
 .ret:
 	ret
