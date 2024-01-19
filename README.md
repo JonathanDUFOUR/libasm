@@ -3,7 +3,7 @@
 Post-CommonCore project of the 42 school.
 
 # Description
-This project is an introduction to assembly language (ASM).  
+This project is an introduction to x86_64 assembly language (ASM).  
 The goal is to make library in 64 bits ASM named `libasm.a`.  
 Inline ASM is forbidden, we must use `.s` files.  
 Compilation must be done with `nasm`.  
@@ -29,7 +29,7 @@ The linked list functions must use the following structure:
 ```c
 typedef struct s_list	t_list;
 
-t_list
+struct s_list
 {
 	void	*data;
 	t_list	*next;
