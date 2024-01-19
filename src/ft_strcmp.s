@@ -21,16 +21,18 @@ ft_strcmp:
 	xor eax, eax
 	xor ecx, ecx
 .loop:
+; check if the 2 current characters are the same
 	mov al, [rdi]
 	mov cl, [rsi]
-	cmp al, cl
-	jne .diff
-	test al, al
-	jz .ret
+	sub eax, ecx
+	jnz .end_of_loop
+; check if the end of the string has been reached
+	test cl, cl
+	jz .end_of_loop
+; step to the next character of each string
 	inc rdi
 	inc rsi
+; repeat until either the current characters differ or the end of the string has been reached
 	jmp .loop
-.diff:
-	sub eax, ecx
-.ret:
+.end_of_loop:
 	ret

@@ -20,7 +20,7 @@ ft_list_push_front:
 	call malloc wrt ..plt
 ; 0.0 check if malloc failed
 	test rax, rax
-	jz .ret
+	jz .return
 	pop rsi
 	pop rdi
 ; 1 init fields
@@ -31,5 +31,5 @@ ft_list_push_front:
 	mov [rax + 8], rsi
 ; 2 update list head
 	mov [rdi], rax
-.ret
+.return
 	ret

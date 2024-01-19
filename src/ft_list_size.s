@@ -17,11 +17,11 @@ ft_list_size:
 .loop:
 ; check if the end of the list has been reached
 	test rdi, rdi
-	jz .ret
+	jz .end_of_loop
 ; increment the counter
 	inc rax
 ; step to the next node
 	mov rdi, [rdi + 8]
 	jmp .loop
-.ret:
+.end_of_loop:
 	ret

@@ -23,12 +23,12 @@ ft_read:
 	syscall
 ; check if sys_read failed
 	test rax, rax
-	jns .ret
+	jns .return
 ; handle the error
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
 	or rax, -1
-.ret:
+.return:
 	ret

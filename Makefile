@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/01/15 14:52:20 by jodufour         ###   ########.fr        #
+#    Updated: 2024/01/18 23:32:23 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,19 +34,30 @@ INC_DIR		=	include
 ######################################
 #            SOURCE FILES            #
 ######################################
-SRC			=	\
-				ft_read.s	\
-				ft_strcmp.s	\
-				ft_strcpy.s	\
-				ft_strdup.s	\
-				ft_strlen.s	\
-				ft_write.s
-SRC_BONUS	=	\
-				ft_atoi_base.s			\
-				ft_list_remove_if.s		\
-				ft_list_push_front.s	\
-				ft_list_size.s			\
-				ft_list_sort.s
+SRC = \
+	${addsuffix .s, \
+		${addprefix ft_, \
+			memcpy \
+			read \
+			strcmp \
+			strcpy \
+			strdup \
+			strlen \
+			write \
+		} \
+	}
+SRC_BONUS = \
+	${addsuffix .s, \
+		${addprefix ft_, \
+			atoi_base \
+			${addprefix list_, \
+				remove_if \
+				push_front \
+				size \
+				sort \
+			} \
+		} \
+	}
 
 ######################################
 #            OBJECT FILES            #
@@ -91,9 +102,10 @@ ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	${AS} ${AFLAGS} -MF ${@:.o=.d} $< ${OUTPUT_OPTION}
 
 clean:
-	${RM} ${OBJ_DIR} ${NAME} vgcore.*
+	${RM} ${OBJ_DIR} vgcore.*
 
 fclean: clean
+	${RM} ${NAME} ${NAME_BONUS}
 
 re: clean all
 

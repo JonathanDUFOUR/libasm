@@ -36,11 +36,11 @@ ft_atoi_base:
 	cmp dl, 0x2f
 	ja .check_duplicates
 	bt rax, rdx
-	jc .ret_zero
+	jc .return_zero
 .check_duplicates:
 ; 0.0.2 check if the current character has already been encountered
 	cmp byte [r8 + rdx], 0xff	; REMIND: why can't we just do `cmp byte [array + rdx], 0xff`?
-	jne .ret_zero
+	jne .return_zero
 ; 0.0.3 save the value as a digit of the current character
 	mov [r8 + rdx], cl			; REMIND: why can't we just do `mov [array + rdx], cl`?
 ; 0.0.4 step to the next character
@@ -49,7 +49,7 @@ ft_atoi_base:
 .end_of_loop0:
 ; 0.1 check if the base is at least 2 characters long
 	test cl, 0xfe
-	jz .ret_zero
+	jz .return_zero
 ; 1 parse the string
 ; 1.0 skip leading whitespace(s) `*( %x09-0d / %x20 )`
 	mov rax, 0x100003e00
@@ -57,7 +57,7 @@ ft_atoi_base:
 	mov dl, [rdi]
 ; 1.0.0 check if the end of string has been reached
 	test dl, dl
-	jz .ret_zero
+	jz .return_zero
 ; 1.0.1 check if the current character is any of `%x09-0d / %x20`
 	bt rax, rdx
 	jnc .end_of_loop1
@@ -83,7 +83,7 @@ ft_atoi_base:
 .loop2:
 ; 1.2.0 check if the end of string has been reached
 	test dl, dl
-	jz .ret_zero
+	jz .return_zero
 ; 1.2.1 check if the current character is the null digit
 	cmp dl, r10b
 	jne .end_of_loop2
@@ -116,7 +116,7 @@ ft_atoi_base:
 	jz .loop4
 	neg eax
 	jmp .loop4
-.ret_zero:
+.return_zero:
 	xor rax, rax
 ; 2 clear the array
 .loop4:

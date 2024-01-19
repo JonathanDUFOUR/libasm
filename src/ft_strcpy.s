@@ -24,10 +24,11 @@ ft_strcpy:
 	mov [rdi], cl
 ; check if the end of the source string has been reached
 	test cl, cl
-	jz .ret
+	jz .end_of_loop
 ; step to the next character
 	inc rdi
 	inc rsi
+; repeat until the end of the source string has been reached
 	jmp .loop
-.ret:
+.end_of_loop:
 	ret

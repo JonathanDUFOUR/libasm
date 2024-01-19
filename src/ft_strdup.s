@@ -1,5 +1,5 @@
 global ft_strdup
-extern ft_strcpy
+extern ft_memcpy
 extern ft_strlen
 extern malloc
 
@@ -22,13 +22,15 @@ ft_strdup:
 	push rdi
 	call ft_strlen
 	inc rax
+	push rax
 	mov rdi, rax
 	call malloc wrt ..plt
 	test rax, rax
-	jz .ret
+	jz .return
 ; copy
-	mov rdi, rax
+	pop rdx
 	pop rsi
-	call ft_strcpy
-.ret:
+	mov rdi, rax
+	call ft_memcpy
+.return:
 	ret
