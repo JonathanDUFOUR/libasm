@@ -22,6 +22,7 @@ ft_strlen:
 	jz .end_of_loop
 ; step to the next character
 	inc rax
+; repeat until the end of the string is reached
 	jmp .loop
 .end_of_loop:
 	sub rax, rdi

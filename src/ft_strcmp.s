@@ -32,7 +32,7 @@ ft_strcmp:
 ; step to the next character of each string
 	inc rdi
 	inc rsi
-; repeat until either the current characters differ or the end of the string has been reached
+; repeat until either the current characters differ or the end of the string is reached
 	jmp .loop
 .end_of_loop:
 	ret

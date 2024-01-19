@@ -23,13 +23,13 @@ ft_list_push_front:
 	jz .return
 	pop rsi
 	pop rdi
-; 1 init fields
-; 1.0 init `data` field
+; 1 initialize the fields
+; 1.0 initialize the `data` field
 	mov [rax], rsi
-; 1.1 init `next` field
+; 1.1 initialize the `next` field
 	mov rsi, [rdi]
 	mov [rax + 8], rsi
-; 2 update list head
+; 2 update the list head
 	mov [rdi], rax
 .return
 	ret

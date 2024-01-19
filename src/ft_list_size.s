@@ -22,6 +22,7 @@ ft_list_size:
 	inc rax
 ; step to the next node
 	mov rdi, [rdi + 8]
+; repeat until the end of the list is reached
 	jmp .loop
 .end_of_loop:
 	ret

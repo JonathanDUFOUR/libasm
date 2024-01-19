@@ -28,7 +28,7 @@ ft_strcpy:
 ; step to the next character
 	inc rdi
 	inc rsi
-; repeat until the end of the source string has been reached
+; repeat until the end of the source string is reached
 	jmp .loop
 .end_of_loop:
 	ret

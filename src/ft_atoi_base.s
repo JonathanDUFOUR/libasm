@@ -45,6 +45,7 @@ ft_atoi_base:
 	mov [r8 + rdx], cl			; REMIND: why can't we just do `mov [array + rdx], cl`?
 ; 0.0.4 step to the next character
 	inc cl
+; 0.0.5 repeat until either the end of string is reached or an invalid character is encountered
 	jmp .loop0
 .end_of_loop0:
 ; 0.1 check if the base is at least 2 characters long
@@ -63,6 +64,7 @@ ft_atoi_base:
 	jnc .end_of_loop1
 ; 1.0.2 step to the next character
 	inc rdi
+; 1.0.3 repeat until either the end of string is reached or a non-whitespace character is encountered
 	jmp .loop1
 .end_of_loop1:
 ; 1.1 compute the sign
@@ -90,6 +92,7 @@ ft_atoi_base:
 ; 1.2.2 step to the next character
 	inc rdi
 	mov dl, [rdi]
+; 1.2.3 repeat until either the end of string is reached or a non-null digit character is encountered
 	jmp .loop2
 .end_of_loop2:
 ; 1.3 compute the significant digits
@@ -109,6 +112,7 @@ ft_atoi_base:
 ; 1.3.3 step to the next character
 	inc rdi
 	mov dl, [rdi]
+; 1.3.4 repeat until either the end of string is reached or a non-digit character is encountered
 	jmp .loop3
 .end_of_loop3:
 ; 1.4 apply the sign to the final result
@@ -127,6 +131,7 @@ ft_atoi_base:
 	dec cl
 	mov dl, [rsi + rcx]
 	mov byte [r8 + rdx], 0xff
+; 2.2 repeat until every previously set value is cleared
 	jmp .loop4
 .end_of_loop4:
 	ret
