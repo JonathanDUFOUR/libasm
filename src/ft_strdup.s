@@ -25,6 +25,7 @@ ft_strdup:
 	push rax
 	mov rdi, rax
 	call malloc wrt ..plt
+; check if malloc failed
 	test rax, rax
 	jz .return
 ; copy

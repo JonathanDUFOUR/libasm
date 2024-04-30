@@ -20,118 +20,109 @@ section .text
 ; - the parsed integer value if the base is valid.
 ; - 0 otherwise.
 ft_atoi_base:
-; 0 check if the base is valid
-	lea r8, [rel array]			; REMIND: why need `rel` keyword?
-	mov rax, 0x0000ac0100003e00	; the bit field that represents the invalid characters
+; check if the base is valid
+	lea r8, [rel array] ; REMIND: why need `rel` keyword?
+	mov rax, 0x0000ac0100003e00 ; the bit field that represents the invalid characters
 	xor rdx, rdx
 	xor rcx, rcx
-; 0.0 check if the base contains invalid character or duplicates
-;     + save the value of each digit of the base
-.loop0:
+.check_base_characters:
 	mov dl, [rsi + rcx]
-; 0.0.0 check if the end of string has been reached
+; check if the end of string has been reached
 	test dl, dl
-	jz .end_of_loop0
-; 0.0.1 check if the current character is any of `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
+	jz .check_base_length
+; check if the current character is any of `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
 	cmp dl, 0x2f
-	ja .check_duplicates
+	ja .check_duplicate
 	bt rax, rdx
 	jc .return_zero
-.check_duplicates:
-; 0.0.2 check if the current character has already been encountered
-	cmp byte [r8 + rdx], 0xff	; REMIND: why can't we just do `cmp byte [array + rdx], 0xff`?
+.check_duplicate:
+; check if the current character has already been encountered
+	cmp byte [r8 + rdx], 0xff ; REMIND: why can't we just do `cmp byte [array + rdx], 0xff`?
 	jne .return_zero
-; 0.0.3 save the value as a digit of the current character
-	mov [r8 + rdx], cl			; REMIND: why can't we just do `mov [array + rdx], cl`?
-; 0.0.4 step to the next character
+; save the value as a digit of the current character
+	mov [r8 + rdx], cl ; REMIND: why can't we just do `mov [array + rdx], cl`?
+; update the base index
 	inc cl
-; 0.0.5 repeat until either the end of string is reached or an invalid character is encountered
-	jmp .loop0
-.end_of_loop0:
-; 0.1 check if the base is at least 2 characters long
+; repeat until either the end of the string is reached or an invalid character is encountered
+	jmp .check_base_characters
+.check_base_length:
+; check if the base is at least 2 characters long
 	test cl, 0xfe
 	jz .return_zero
-; 1 parse the string
-; 1.0 skip leading whitespace(s) `*( %x09-0d / %x20 )`
-	mov rax, 0x100003e00
-.loop1:
+; parse the string
+	mov rax, 0x100003e00 ; the bit field that represents the whitespace characters
+.skip_whitespaces:
 	mov dl, [rdi]
-; 1.0.0 check if the end of string has been reached
+; check if the end of string has been reached
 	test dl, dl
 	jz .return_zero
-; 1.0.1 check if the current character is any of `%x09-0d / %x20`
+; check if the current character is any of `%x09-0d / %x20`
 	bt rax, rdx
-	jnc .end_of_loop1
-; 1.0.2 step to the next character
+	jnc .compute_sign
+; update the string pointer
 	inc rdi
-; 1.0.3 repeat until either the end of string is reached or a non-whitespace character is encountered
-	jmp .loop1
-.end_of_loop1:
-; 1.1 compute the sign
+; repeat until either the end of string is reached or a non-whitespace character is encountered
+	jmp .skip_whitespaces
+.compute_sign:
 	xor r9b, r9b
-; 1.1.0 check if the first non-whitespace character is a sign `%x2b / %x2d`
+	mov r10b, [rsi] ; save the null digit for later operations
+; check if the first non-whitespace character is a sign `%x2b / %x2d`
 	sub dl, 0x2b
 	test dl, 0xfd
 	jnz .skip_leading_null_digits
-; 1.1.1 save whether it is the minus sign `%x2d`
+; save whether it is the minus sign `%x2d`
 	test dl, dl
 	setnz r9b
-; 1.1.2 step to the next character
+; update the string pointer
 	inc rdi
 .skip_leading_null_digits:
-; 1.2 skip leading null digit(s)
 	mov dl, [rdi]
-	mov r10b, [rsi]
-.loop2:
-; 1.2.0 check if the end of string has been reached
+; check if the end of string has been reached
 	test dl, dl
 	jz .return_zero
-; 1.2.1 check if the current character is the null digit
+; check if the current character is the null digit
 	cmp dl, r10b
-	jne .end_of_loop2
-; 1.2.2 step to the next character
+	jne .no_more_leading_null_digit
+; update the string pointer
 	inc rdi
-	mov dl, [rdi]
-; 1.2.3 repeat until either the end of string is reached or a non-null digit character is encountered
-	jmp .loop2
-.end_of_loop2:
-; 1.3 compute the significant digits
+; repeat until either the end of string is reached or a non-null digit character is encountered
+	jmp .skip_leading_null_digits
+.no_more_leading_null_digit:
 	xor rax, rax
 	xor r10d, r10d
-.loop3:
-; 1.3.0 check if the end of string has been reached
+.compute_significant_digits:
+; check if the end of string has been reached
 	test dl, dl
-	jz .end_of_loop3
-; 1.3.1 get + check the value as a digit of the current character
-	mov r10b, [r8 + rdx]		; REMIND: why can't we just do `mov r10b, [array + dl]`?
+	jz .no_more_significant_digit
+; get + check the value as a digit of the current character
+	mov r10b, [r8 + rdx] ; REMIND: why can't we just do `mov r10b, [array + dl]`?
 	cmp r10b, 0xff
-	je .end_of_loop3
-; 1.3.2 compute the current value into the final result
+	je .no_more_significant_digit
+; compute the current value into the final result
 	mul ecx
 	add eax, r10d
-; 1.3.3 step to the next character
+; step to the next character
 	inc rdi
 	mov dl, [rdi]
-; 1.3.4 repeat until either the end of string is reached or a non-digit character is encountered
-	jmp .loop3
-.end_of_loop3:
-; 1.4 apply the sign to the final result
+; repeat until either the end of string is reached or a non-digit character is encountered
+	jmp .compute_significant_digits
+.no_more_significant_digit:
+; apply the sign to the final result
 	test r9b, r9b
-	jz .loop4
+	jz .restore_array_values
 	neg eax
-	jmp .loop4
-.return_zero:
-	xor rax, rax
-; 2 clear the array
-.loop4:
-; 2.0 check if every previously set value has been cleared
+.restore_array_values:
+; check if every previously set value has been cleared
 	test cl, cl
-	jz .end_of_loop4
-; 2.1 reset the default value for the `cl`th characters of the base
+	jz .return
+; reset the default value for the `cl`th characters of the base
 	dec cl
 	mov dl, [rsi + rcx]
 	mov byte [r8 + rdx], 0xff
-; 2.2 repeat until every previously set value is cleared
-	jmp .loop4
-.end_of_loop4:
+; repeat until every previously set value is cleared
+	jmp .restore_array_values
+.return:
 	ret
+.return_zero:
+	xor rax, rax
+	jmp .restore_array_values

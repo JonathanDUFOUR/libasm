@@ -17,51 +17,154 @@ section .text
 ; rax: the address of the destination memory area.
 ft_memcpy:
 	mov rax, rdi
-; 0 copy bytes using chunks of 8 bytes while it fits the remaining number of bytes to copy.
-.copy_8_bytes:
-; 0.0 check if the remaining number of bytes to copy is less than 8.
-	cmp rdx, 8
-	jb .copy_4_bytes
-; 0.1 copy 8 bytes from the source memory area to the destination memory area.
-	mov rcx, [rsi]
-	mov [rdi], rcx
-; 0.2 step to the next areas + update the remaining number of bytes to copy.
-	add rdi, 8
-	add rsi, 8
-	sub rdx, 8
-; 0.5 repeat until the remaining number of bytes to copy is less than 8.
-	jmp .copy_8_bytes
-; 1 copy bytes using a chunk of 4 bytes if it fits the remaining number of bytes to copy.
-.copy_4_bytes:
-; 1.0 check if the remaining number of bytes to copy is less than 4.
-	cmp rdx, 4
-	jb .copy_2_bytes
-; 1.1 copy 4 bytes from the source memory area to the destination memory area.
-	mov ecx, [rsi]
-	mov [rdi], ecx
-; 1.2 step to the next areas + update the remaining number of bytes to copy.
-	add rdi, 4
-	add rsi, 4
-	sub rdx, 4
-; 2 copy bytes using a chunk of 2 bytes if it fits the remaining number of bytes to copy.
-.copy_2_bytes:
-; 2.0 check if the remaining number of bytes to copy is less than 2.
+; check if both pointers can be aligned to a qword boundary
+	mov rcx, rdi
+	mov r8, rsi
+	and rcx, 7 ; modulo 8
+	and r8, 7 ; modulo 8
+	cmp rcx, r8
+	je .qword_alignment
+; check if both pointers can be aligned to a dword boundary
+	and rcx, 3 ; modulo 4
+	and r8, 3 ; modulo 4
+	cmp rcx, r8
+	je .dword_alignment
+; check if both pointers can be aligned to a word boundary
+	and rcx, 1 ; modulo 2
+	and r8, 1 ; modulo 2
+	cmp rcx, r8
+	je .word_alignment
+.byte_copy:
+; check if the number of bytes to copy is 0
+	test rdx, rdx
+	jz .return
+; copy 1 byte
+	mov cl, [rsi]
+	mov [rdi], cl
+; update the pointers and the number of bytes to copy
+	inc rdi
+	inc rsi
+	dec rdx
+; repeat until the number of bytes to copy is 0
+	jmp .byte_copy
+.word_alignment:
+; check if both pointers are aligned to a word boundary
+	test rdi, 1 ; modulo 2
+	jz .word_copy
+; check if the number of bytes to copy is 0
+	test rdx, rdx
+	jz .return
+; copy 1 byte
+	mov cl, [rsi]
+	mov [rdi], cl
+; update the pointers and the number of bytes to copy
+	inc rdi
+	inc rsi
+	dec rdx
+; repeat until either the pointers are aligned to a word boundary
+; or the number of bytes to copy is 0
+	jmp .word_alignment
+.word_copy:
+; check if the number of bytes to copy is less than 2
 	cmp rdx, 2
-	jb .copy_1_byte
-; 2.1 copy 2 bytes from the source memory area to the destination memory area.
+	jb .last_byte_copy
+; copy 2 bytes
 	mov cx, [rsi]
 	mov [rdi], cx
-; 2.2 step to the next areas + update the remaining number of bytes to copy.
+; update the pointers and the number of bytes to copy
 	add rdi, 2
 	add rsi, 2
 	sub rdx, 2
-; 3 copy the last byte if it fits the remaining number of bytes to copy.
-.copy_1_byte:
-; 3.0 check if the remaining number of bytes to copy is 0.
+; repeat until the number of bytes to copy is less than 2
+	jmp .word_copy
+.dword_alignment:
+; check if both pointers are aligned to a dword boundary
+	test rdi, 3 ; modulo 4
+	jz .dword_copy
+; check if the number of bytes to copy is 0
 	test rdx, rdx
 	jz .return
-; 3.1 copy the last byte from the source memory area to the destination memory area.
+; copy 1 byte
 	mov cl, [rsi]
 	mov [rdi], cl
-.return
+; update the pointers and the number of bytes to copy
+	inc rdi
+	inc rsi
+	dec rdx
+; repeat until either the pointers are aligned to a dword boundary
+; or the number of bytes to copy is 0
+	jmp .dword_alignment
+.dword_copy:
+; check if the number of bytes to copy is less than 4
+	cmp rdx, 4
+	jb .last_word_copy
+; copy 4 bytes
+	mov ecx, [rsi]
+	mov [rdi], ecx
+; update the pointers and the number of bytes to copy
+	add rdi, 4
+	add rsi, 4
+	sub rdx, 4
+; repeat until the number of bytes to copy is less than 4
+	jmp .dword_copy
+.qword_alignment:
+; check if both pointers are aligned to a qword boundary
+	test rdi, 7 ; modulo 8
+	jz .qword_copy
+; check if the number of bytes to copy is 0
+	test rdx, rdx
+	jz .return
+; copy 1 byte
+	mov cl, [rsi]
+	mov [rdi], cl
+; update the pointers and the number of bytes to copy
+	inc rdi
+	inc rsi
+	dec rdx
+; repeat until either the pointers are aligned to a qword boundary
+; or the number of bytes to copy is 0
+	jmp .qword_alignment
+.qword_copy:
+; check if the number of bytes to copy is less than 8
+	cmp rdx, 8
+	jb .last_dword_copy
+; copy 8 bytes
+	mov rcx, [rsi]
+	mov [rdi], rcx
+; update the pointers and the number of bytes to copy
+	add rdi, 8
+	add rsi, 8
+	sub rdx, 8
+; repeat until the number of bytes to copy is less than 8
+	jmp .qword_copy
+.last_dword_copy:
+; check if the number of bytes to copy is less than 4
+	cmp rdx, 4
+	jb .last_word_copy
+; copy 4 bytes
+	mov ecx, [rsi]
+	mov [rdi], ecx
+; update the pointers and the number of bytes to copy
+	add rdi, 4
+	add rsi, 4
+	sub rdx, 4
+.last_word_copy:
+; check if the number of bytes to copy is less than 2
+	cmp rdx, 2
+	jb .last_byte_copy
+; copy 2 bytes
+	mov cx, [rsi]
+	mov [rdi], cx
+; update the pointers and the number of bytes to copy
+	add rdi, 2
+	add rsi, 2
+	sub rdx, 2
+.last_byte_copy:
+; check if the number of bytes to copy is 0
+	test rdx, rdx
+	jz .return
+; copy 1 byte
+	mov cl, [rsi]
+	mov [rdi], cl
+.return:
 	ret
