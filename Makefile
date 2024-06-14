@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/04/30 22:39:49 by jodufour         ###   ########.fr        #
+#    Updated: 2024/06/14 11:51:24 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,9 +27,9 @@ NAME_BONUS := libasm_bonus.a
 #######################################
 #             DIRECTORIES             #
 #######################################
-SRC_DIR := src
-OBJ_DIR := obj
-INC_DIR := include
+  SRC_DIR := src
+  OBJ_DIR := obj
+MACRO_DIR := ${SRC_DIR}/macro
 
 ######################################
 #            SOURCE FILES            #
@@ -38,9 +38,11 @@ SRC := \
 	${addsuffix .s, \
 		${addprefix ft_, \
 			memcpy \
+			memcpy_alt \
 			read \
 			strcmp \
 			strcpy \
+			strcpy_alt \
 			strdup \
 			strlen \
 			write \
@@ -74,7 +76,8 @@ DEP_BONUS := ${OBJ_BONUS:.o=.d}
 #######################################
 AFLAGS := \
 	-f elf64 \
-	-werror
+	-werror \
+	-I ${MACRO_DIR}
 
 ifeq (${DEBUG}, 1)
 	AFLAGS += -g
