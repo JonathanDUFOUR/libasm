@@ -49,21 +49,21 @@ align 16
 .check_next:
 ; update the pointer
 	add rax, 0x80
-; check the next 32-bytes chunks
+; check the next 128 bytes
 	vmovdqa ymm1, [rax]
 	vpminub ymm2, ymm1, [rax+0x20]
 	vpminub ymm3, ymm2, [rax+0x40]
 	vpminub ymm4, ymm3, [rax+0x60]
 	vpcmpeqb ymm4, ymm0, ymm4
 	vpmovmskb ecx, ymm4
-; repeat until the end of the string is reached
 	test ecx, ecx
+; repeat until the end of the string is reached
 	jz .check_next
-; calculate the index of the first null byte found in the next 32-bytes chunks
-	CHECK_CHUNK ymm1, .null_byte_is_in_the_next_32_bytes
-	CHECK_CHUNK ymm2, .null_byte_is_in_the_next_64_bytes
-	CHECK_CHUNK ymm3, .null_byte_is_in_the_next_96_bytes
-; null byte is in the next 128 bytes
+; calculate the index of the first null byte found in the next 128 bytes
+	CHECK_CHUNK ymm1, .null_byte_index_is_between_0_and_31
+	CHECK_CHUNK ymm2, .null_byte_index_is_between_32_and_63
+	CHECK_CHUNK ymm3, .null_byte_index_is_between_64_and_95
+; null byte index is between 96 and 127
 	vpmovmskb rcx, ymm4
 ; calculate the index of the first null byte in the next chunk of bytes
 ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
@@ -74,21 +74,21 @@ align 16
 	ret
 
 align 16
-.null_byte_is_in_the_next_96_bytes:
+.null_byte_index_is_between_64_and_95:
 	add rax, 0x40
 	add rax, rcx
 	sub rax, rdi
 	ret
 
 align 16
-.null_byte_is_in_the_next_64_bytes:
+.null_byte_index_is_between_32_and_63:
 	add rax, 0x20
 	add rax, rcx
 	sub rax, rdi
 	ret
 
 align 16
-.null_byte_is_in_the_next_32_bytes:
+.null_byte_index_is_between_0_and_31:
 	add rax, rcx
 	sub rax, rdi
 	ret

@@ -41,7 +41,7 @@ ft_memcpy:
 	sub rdx, rcx
 	sub rdx, 32 ; corresponds to the already copied last 32 bytes
 	NOP_4
-.copy_the_next_chunk_of_intermediate_bytes:
+.copy_the_next_512_intermediate_bytes:
 ; update the number of intermediate bytes to copy
 	sub rdx, 512
 	jc .copy_less_than_512_intermediate_bytes
@@ -82,7 +82,7 @@ ft_memcpy:
 	add rdi, 512
 	add rsi, 512
 ; repeat until there are less than 512 intermediate bytes to copy
-	jmp .copy_the_next_chunk_of_intermediate_bytes
+	jmp .copy_the_next_512_intermediate_bytes
 
 align 16
 .copy_less_than_512_intermediate_bytes:
