@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/04/30 22:39:49 by jodufour         ###   ########.fr        #
+#    Updated: 2024/06/29 00:43:33 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -29,7 +29,6 @@ NAME_BONUS := libasm_bonus.a
 #######################################
 SRC_DIR := src
 OBJ_DIR := obj
-INC_DIR := include
 
 ######################################
 #            SOURCE FILES            #
@@ -74,7 +73,8 @@ DEP_BONUS := ${OBJ_BONUS:.o=.d}
 #######################################
 AFLAGS := \
 	-f elf64 \
-	-werror
+	-werror \
+	-I ${SRC_DIR}
 
 ifeq (${DEBUG}, 1)
 	AFLAGS += -g
@@ -100,7 +100,7 @@ bonus: ${NAME_BONUS}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	@${MKDIR} ${@D}
-	${AS} ${AFLAGS} -MF ${@:.o=.d} $< ${OUTPUT_OPTION}
+	${AS} ${AFLAGS} -MD ${@:.o=.d} $< ${OUTPUT_OPTION}
 
 clean:
 	${RM} ${OBJ_DIR} vgcore.*
