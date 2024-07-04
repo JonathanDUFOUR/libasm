@@ -5,8 +5,6 @@ ALIGNMODE p6
 
 default rel
 
-%include "macro/nop.s"
-
 section .text
 ; Copies N bytes from a memory area to another.
 ; The memory areas are assumed to not overlap.
@@ -40,7 +38,7 @@ ft_memcpy:
 ; calculate how many intermediate bytes shall be copied
 	sub rdx, rcx
 	sub rdx, 32 ; corresponds to the already copied last 32 bytes
-	NOP_4
+align 16
 .copy_the_next_512_intermediate_bytes:
 ; update the number of intermediate bytes to copy
 	sub rdx, 512
