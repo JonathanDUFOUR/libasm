@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/06/29 00:52:56 by jodufour         ###   ########.fr        #
+#    Updated: 2024/08/08 02:11:54 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,12 +36,29 @@ OBJ_DIR := obj
 SRC := \
 	${addsuffix .s, \
 		${addprefix ft_, \
+			${addprefix memcpy/, \
+				dsta_srcu \
+				dstu_srca \
+				dstu_srcu \
+			} \
+			${addprefix strcmp/, \
+				s0a_s1u \
+				s0u_s1a \
+				s0u_s1u \
+			} \
+			${addprefix strcpy/, \
+				dsta_srcu \
+				dstu_srca \
+				dstu_srcu \
+			} \
+			${addprefix strlen/, \
+				sa \
+				su \
+			} \
 			memcpy \
-			memcpy_alt \
 			read \
 			strcmp \
 			strcpy \
-			strcpy_alt \
 			strdup \
 			strlen \
 			write \
