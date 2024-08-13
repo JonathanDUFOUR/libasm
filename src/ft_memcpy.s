@@ -3,6 +3,36 @@ global ft_memcpy: function
 %use smartalign
 ALIGNMODE p6
 
+%define SIZEOF_BYTE 1
+%define SIZEOF_WORD 2
+%define SIZEOF_DWORD 4
+%define SIZEOF_QWORD 8
+%define SIZEOF_OWORD 16
+%define SIZEOF_YWORD 32
+
+%macro CLEAN_RET 0
+	vzeroupper
+	ret
+%endmacro
+
+%macro UPDATE_POINTERS_TO_NEXT_YWORD_BOUNDARY_AND_UPDATE_NUMBER_OF_BYTES_TO_COPY_ACCORDINGLY 0
+; copy the first and the last yword
+	sub rdx, SIZEOF_YWORD ; corresponds to the last yword that is about to be copied
+	vmovdqu ymm0, [rsi]
+	vmovdqu ymm1, [rsi+rdx]
+	vmovdqu [rdi], ymm0
+	vmovdqu [rdi+rdx], ymm1
+; calculate how far the destination area is to its next yword boundary
+	mov rcx, rdi
+	neg rcx
+	and rcx, 31 ; modulo 32
+; advance both pointers by the calculated distance
+	add rdi, rcx
+	add rsi, rcx
+; update the number of bytes to copy
+	sub rdx, rcx
+%endmacro
+
 default rel
 
 section .text
@@ -23,27 +53,13 @@ ft_memcpy:
 ; check if we can do a small copy
 	cmp rdx, 545
 	jb .copy_less_than_545_bytes
-; copy the first 32 bytes and the last 32 bytes
-	vmovdqu ymm0, [rsi]
-	vmovdqu ymm1, [rsi+rdx-32]
-	vmovdqu [rdi], ymm0
-	vmovdqu [rdi+rdx-32], ymm1
-; calculate how far the destination pointer is to its next yword boundary
-	lea rcx, [rdi+32]
-	and rcx, -32
-	sub rcx, rdi
-; advance both the destination pointer and the source pointer by the calculated distance
-	add rdi, rcx
-	add rsi, rcx
-; calculate how many intermediate bytes shall be copied
-	sub rdx, rcx
-	sub rdx, 32 ; corresponds to the already copied last 32 bytes
+	UPDATE_POINTERS_TO_NEXT_YWORD_BOUNDARY_AND_UPDATE_NUMBER_OF_BYTES_TO_COPY_ACCORDINGLY
 align 16
-.copy_the_next_512_intermediate_bytes:
+.copy_the_next_16_intermediate_ywords:
 ; update the number of intermediate bytes to copy
 	sub rdx, 512
-	jc .copy_less_than_512_intermediate_bytes
-; copy 512 intermediate bytes at a time
+	jc .copy_less_than_16_intermediate_ywords
+; load the next 16 intermediate ywords from the source memory area
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -60,6 +76,7 @@ align 16
 	vmovdqu ymm13, [rsi+0x1A0]
 	vmovdqu ymm14, [rsi+0x1C0]
 	vmovdqu ymm15, [rsi+0x1E0]
+; store the next 16 intermediate ywords to the destination memory area
 	vmovdqa [rdi+0x000], ymm0
 	vmovdqa [rdi+0x020], ymm1
 	vmovdqa [rdi+0x040], ymm2
@@ -77,133 +94,120 @@ align 16
 	vmovdqa [rdi+0x1C0], ymm14
 	vmovdqa [rdi+0x1E0], ymm15
 ; update the pointers
-	add rdi, 512
-	add rsi, 512
-; repeat until there are less than 512 intermediate bytes to copy
-	jmp .copy_the_next_512_intermediate_bytes
+	add rdi, 16 * SIZEOF_YWORD
+	add rsi, 16 * SIZEOF_YWORD
+; repeat until there are less than 16 intermediate ywords to copy
+	jmp .copy_the_next_16_intermediate_ywords
 
 align 16
-.copy_less_than_512_intermediate_bytes:
-; calculate how many intermediate 32-bytes chunks remain to be copied
+.copy_less_than_16_intermediate_ywords:
+; calculate how many intermediate ywords remain to be copied
 	add rdx, 512
 	shr rdx, 5 ; divide by 32
-; copy the remaining intermediate 32-bytes chunks
+; copy the remaining intermediate ywords
 	lea rcx, [.small_copy_jump_table]
-	jmp [rcx+rdx*8]
+	jmp [rcx+rdx*SIZEOF_QWORD]
 
 align 16
 .copy_less_than_545_bytes:
-	cmp rdx, 64
+	cmp edx, 64
 	ja .copy_between_65_and_544_bytes
-	cmp rdx, 32
+	cmp edx, 32
 	ja .copy_between_33_and_64_bytes
-	cmp rdx, 16
+	cmp edx, 16
 	ja .copy_between_17_and_32_bytes
-	cmp rdx, 8
+	cmp edx, 8
 	ja .copy_between_9_and_16_bytes
-	cmp rdx, 4
+	cmp edx, 4
 	ja .copy_between_5_and_8_bytes
-	cmp rdx, 2
+	cmp edx, 2
 	ja .copy_between_3_and_4_bytes
-	test rdx, rdx
+	test edx, edx
 	jnz .copy_between_1_and_2_bytes
 	ret
 
 align 16
 .copy_between_1_and_2_bytes:
 	mov cl, [rsi]
-	mov sil, [rsi+rdx-1]
+	mov sil, [rsi+rdx-SIZEOF_BYTE]
 	mov [rdi], cl
-	mov [rdi+rdx-1], sil
+	mov [rdi+rdx-SIZEOF_BYTE], sil
 	ret
 
 align 16
 .copy_between_3_and_4_bytes:
 	mov cx, [rsi]
-	mov si, [rsi+rdx-2]
+	mov si, [rsi+rdx-SIZEOF_WORD]
 	mov [rdi], cx
-	mov [rdi+rdx-2], si
+	mov [rdi+rdx-SIZEOF_WORD], si
 	ret
 
 align 16
 .copy_between_5_and_8_bytes:
 	mov ecx, [rsi]
-	mov esi, [rsi+rdx-4]
+	mov esi, [rsi+rdx-SIZEOF_DWORD]
 	mov [rdi], ecx
-	mov [rdi+rdx-4], esi
+	mov [rdi+rdx-SIZEOF_DWORD], esi
 	ret
 
 align 16
 .copy_between_9_and_16_bytes:
 	mov rcx, [rsi]
-	mov rsi, [rsi+rdx-8]
+	mov rsi, [rsi+rdx-SIZEOF_QWORD]
 	mov [rdi], rcx
-	mov [rdi+rdx-8], rsi
+	mov [rdi+rdx-SIZEOF_QWORD], rsi
 	ret
 
 align 16
 .copy_between_17_and_32_bytes:
 	movdqu xmm0, [rsi]
-	movdqu xmm1, [rsi+rdx-16]
+	movdqu xmm1, [rsi+rdx-SIZEOF_OWORD]
 	movdqu [rdi], xmm0
-	movdqu [rdi+rdx-16], xmm1
+	movdqu [rdi+rdx-SIZEOF_OWORD], xmm1
 	ret
 
 align 16
 .copy_between_33_and_64_bytes:
 	vmovdqu ymm0, [rsi]
-	vmovdqu ymm1, [rsi+rdx-32]
+	vmovdqu ymm1, [rsi+rdx-SIZEOF_YWORD]
 	vmovdqu [rdi], ymm0
-	vmovdqu [rdi+rdx-32], ymm1
-	ret
+	vmovdqu [rdi+rdx-SIZEOF_YWORD], ymm1
+	CLEAN_RET
 
 align 16
 .copy_between_65_and_544_bytes:
-; copy the first 32 bytes and the last 32 bytes
-	vmovdqu ymm0, [rsi]
-	vmovdqu ymm1, [rsi+rdx-32]
-	vmovdqu [rdi], ymm0
-	vmovdqu [rdi+rdx-32], ymm1
-; calculate how far the destination pointer is to its next yword boundary
-	mov rcx, rdi
-	neg rcx
-	and rcx, 31 ; modulo 32
-; advance both the destination pointer and the source pointer by the calculated distance
-	add rdi, rcx
-	add rsi, rcx
-; calculate how many intermediate 32-bytes chunks shall be copied
-	sub rdx, rcx
-	sub rdx, 32
+	UPDATE_POINTERS_TO_NEXT_YWORD_BOUNDARY_AND_UPDATE_NUMBER_OF_BYTES_TO_COPY_ACCORDINGLY
+; calculate how many intermediate ywords shall be copied
 	shr rdx, 5 ; divide by 32
 	lea rcx, [.small_copy_jump_table]
-	jmp [rcx+rdx*8]
+	jmp [rcx+rdx*SIZEOF_QWORD]
 
 align 16
-.copy_1_chunk:
+.copy_1_yword:
 	vmovdqu ymm0, [rsi]
 	vmovdqa [rdi], ymm0
-	ret
+	CLEAN_RET
 
 align 16
-.copy_2_chunks:
+.copy_2_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqa [rdi+0x00], ymm0
 	vmovdqa [rdi+0x20], ymm1
-	ret
+	CLEAN_RET
 
 align 16
-.copy_3_chunks:
+.copy_3_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
 	vmovdqa [rdi+0x00], ymm0
 	vmovdqa [rdi+0x20], ymm1
 	vmovdqa [rdi+0x40], ymm2
-	ret
+	CLEAN_RET
 
 align 16
-.copy_4_chunks:
+.copy_4_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
@@ -212,10 +216,10 @@ align 16
 	vmovdqa [rdi+0x20], ymm1
 	vmovdqa [rdi+0x40], ymm2
 	vmovdqa [rdi+0x60], ymm3
-	ret
+	CLEAN_RET
 
 align 16
-.copy_5_chunks:
+.copy_5_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
@@ -226,10 +230,10 @@ align 16
 	vmovdqa [rdi+0x40], ymm2
 	vmovdqa [rdi+0x60], ymm3
 	vmovdqa [rdi+0x80], ymm4
-	ret
+	CLEAN_RET
 
 align 16
-.copy_6_chunks:
+.copy_6_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
@@ -242,10 +246,10 @@ align 16
 	vmovdqa [rdi+0x60], ymm3
 	vmovdqa [rdi+0x80], ymm4
 	vmovdqa [rdi+0xA0], ymm5
-	ret
+	CLEAN_RET
 
 align 16
-.copy_7_chunks:
+.copy_7_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
@@ -260,10 +264,10 @@ align 16
 	vmovdqa [rdi+0x80], ymm4
 	vmovdqa [rdi+0xA0], ymm5
 	vmovdqa [rdi+0xC0], ymm6
-	ret
+	CLEAN_RET
 
 align 16
-.copy_8_chunks:
+.copy_8_ywords:
 	vmovdqu ymm0, [rsi+0x00]
 	vmovdqu ymm1, [rsi+0x20]
 	vmovdqu ymm2, [rsi+0x40]
@@ -280,10 +284,10 @@ align 16
 	vmovdqa [rdi+0xA0], ymm5
 	vmovdqa [rdi+0xC0], ymm6
 	vmovdqa [rdi+0xE0], ymm7
-	ret
+	CLEAN_RET
 
 align 16
-.copy_9_chunks:
+.copy_9_ywords:
 	vmovdqu ymm0, [rsi+0x000]
 	vmovdqu ymm1, [rsi+0x020]
 	vmovdqu ymm2, [rsi+0x040]
@@ -302,10 +306,10 @@ align 16
 	vmovdqa [rdi+0x0C0], ymm6
 	vmovdqa [rdi+0x0E0], ymm7
 	vmovdqa [rdi+0x100], ymm8
-	ret
+	CLEAN_RET
 
 align 16
-.copy_10_chunks:
+.copy_10_ywords:
 	vmovdqu ymm0, [rsi+0x000]
 	vmovdqu ymm1, [rsi+0x020]
 	vmovdqu ymm2, [rsi+0x040]
@@ -326,10 +330,10 @@ align 16
 	vmovdqa [rdi+0x0E0], ymm7
 	vmovdqa [rdi+0x100], ymm8
 	vmovdqa [rdi+0x120], ymm9
-	ret
+	CLEAN_RET
 
 align 16
-.copy_11_chunks:
+.copy_11_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -352,10 +356,10 @@ align 16
 	vmovdqa [rdi+0x100], ymm8
 	vmovdqa [rdi+0x120], ymm9
 	vmovdqa [rdi+0x140], ymm10
-	ret
+	CLEAN_RET
 
 align 16
-.copy_12_chunks:
+.copy_12_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -380,10 +384,10 @@ align 16
 	vmovdqa [rdi+0x120], ymm9
 	vmovdqa [rdi+0x140], ymm10
 	vmovdqa [rdi+0x160], ymm11
-	ret
+	CLEAN_RET
 
 align 16
-.copy_13_chunks:
+.copy_13_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -410,10 +414,10 @@ align 16
 	vmovdqa [rdi+0x140], ymm10
 	vmovdqa [rdi+0x160], ymm11
 	vmovdqa [rdi+0x180], ymm12
-	ret
+	CLEAN_RET
 
 align 16
-.copy_14_chunks:
+.copy_14_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -442,10 +446,10 @@ align 16
 	vmovdqa [rdi+0x160], ymm11
 	vmovdqa [rdi+0x180], ymm12
 	vmovdqa [rdi+0x1A0], ymm13
-	ret
+	CLEAN_RET
 
 align 16
-.copy_15_chunks:
+.copy_15_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -476,10 +480,10 @@ align 16
 	vmovdqa [rdi+0x180], ymm12
 	vmovdqa [rdi+0x1A0], ymm13
 	vmovdqa [rdi+0x1C0], ymm14
-	ret
+	CLEAN_RET
 
 align 16
-.copy_16_chunks:
+.copy_16_ywords:
 	vmovdqu ymm0,  [rsi+0x000]
 	vmovdqu ymm1,  [rsi+0x020]
 	vmovdqu ymm2,  [rsi+0x040]
@@ -512,23 +516,23 @@ align 16
 	vmovdqa [rdi+0x1A0], ymm13
 	vmovdqa [rdi+0x1C0], ymm14
 	vmovdqa [rdi+0x1E0], ymm15
-	ret
+	CLEAN_RET
 
-section .rodata
+section .data.rel.ro.local
 .small_copy_jump_table:
-	dq .copy_1_chunk
-	dq .copy_2_chunks
-	dq .copy_3_chunks
-	dq .copy_4_chunks
-	dq .copy_5_chunks
-	dq .copy_6_chunks
-	dq .copy_7_chunks
-	dq .copy_8_chunks
-	dq .copy_9_chunks
-	dq .copy_10_chunks
-	dq .copy_11_chunks
-	dq .copy_12_chunks
-	dq .copy_13_chunks
-	dq .copy_14_chunks
-	dq .copy_15_chunks
-	dq .copy_16_chunks
+	dq .copy_1_yword
+	dq .copy_2_ywords
+	dq .copy_3_ywords
+	dq .copy_4_ywords
+	dq .copy_5_ywords
+	dq .copy_6_ywords
+	dq .copy_7_ywords
+	dq .copy_8_ywords
+	dq .copy_9_ywords
+	dq .copy_10_ywords
+	dq .copy_11_ywords
+	dq .copy_12_ywords
+	dq .copy_13_ywords
+	dq .copy_14_ywords
+	dq .copy_15_ywords
+	dq .copy_16_ywords

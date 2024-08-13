@@ -51,6 +51,7 @@ section .text
 ;
 ; Return:
 ; rax: the address of the destination string.
+align 16
 ft_strcpy_dstu_srca:
 ; preliminary initialization
 	mov rax, rdi

@@ -1,12 +1,13 @@
-global ft_write
-extern __errno_location
+global ft_write: function
 
-section .data
+%use smartalign
+ALIGNMODE p6
 
-section .bss
+extern __errno_location: function
 
 section .text
 ; Writes N bytes from a buffer into a file descriptor.
+; The buffer is assumed to be at least N bytes large.
 ; In case of error, sets errno properly.
 ;
 ; Parameters
@@ -16,18 +17,21 @@ section .text
 ;
 ; Return
 ; rax: the number of bytes written, or -1 if an error occurred.
+align 16
 ft_write:
 ; call sys_write
 	mov rax, 1
 	syscall
 ; check if sys_write failed
 	test rax, rax
-	jns .return
-; handle the error
+	js .error
+	ret
+
+align 16
+.error:
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
 	or rax, -1
-.return:
 	ret

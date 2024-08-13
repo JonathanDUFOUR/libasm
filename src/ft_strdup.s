@@ -1,11 +1,11 @@
-global ft_strdup
-extern ft_memcpy
-extern ft_strlen
-extern malloc
+global ft_strdup: function
 
-section .data
+%use smartalign
+ALIGNMODE p6
 
-section .bss
+extern ft_memcpy: function
+extern ft_strlen: function
+extern malloc: function
 
 section .text
 ; Duplicates a string, using dynamic memory allocation.
@@ -17,21 +17,25 @@ section .text
 ;
 ; Return:
 ; rax: the address of the newly allocated string, or NULL in case of error.
+align 16
 ft_strdup:
 ; reserve
-	push rdi
+	push rdi ; preserve the address of the source string
 	call ft_strlen
-	inc rax
-	push rax
+	inc rax ; add 1 for the null-terminator
+	push rax ; preserve the number of bytes to allocate and to copy
 	mov rdi, rax
 	call malloc wrt ..plt
 ; check if malloc failed
 	test rax, rax
-	jz .return
+	jz .malloc_failed
 ; copy
-	pop rdx
-	pop rsi
+	pop rdx ; restore the number of bytes to copy
+	pop rsi ; restore the address of the source string
 	mov rdi, rax
-	call ft_memcpy
-.return:
+	jmp ft_memcpy
+
+align 16
+.malloc_failed:
+	add rsp, 0x10 ; restore the stack pointer
 	ret

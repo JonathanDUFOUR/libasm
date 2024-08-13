@@ -1,9 +1,9 @@
-global ft_read
-extern __errno_location
+global ft_read: function
 
-section .data
+%use smartalign
+ALIGNMODE p6
 
-section .bss
+extern __errno_location: function
 
 section .text
 ; Reads N bytes from a file descriptor into a buffer.
@@ -17,18 +17,21 @@ section .text
 ;
 ; Return
 ; rax: the number of bytes read, or -1 if an error occurred.
+align 16
 ft_read:
 ; call sys_read
 	xor rax, rax
 	syscall
 ; check if sys_read failed
 	test rax, rax
-	jns .return
-; handle the error
+	js .error
+	ret
+
+align 16
+.error:
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
 	mov [rax], rdi
 	or rax, -1
-.return:
 	ret

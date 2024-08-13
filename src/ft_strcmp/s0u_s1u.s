@@ -5,8 +5,8 @@ ALIGNMODE p6
 
 %define SIZEOF_YWORD 32
 
-%define EQUAL_EACH        01000b
-%define NEGATIVE_POLARITY 10000b
+%define EQUAL_EACH        01000_b
+%define NEGATIVE_POLARITY 10000_b
 
 ; Parameters:
 ; %1: the label to jump to if the given YMM register contains a null byte.
@@ -44,6 +44,7 @@ section .text
 ; - zero if the strings are equal.
 ; - a negative value if the first string is less than the second.
 ; - a positive value if the first string is greater than the second.
+align 16
 ft_strcmp_s0u_s1u:
 ; preliminary initialization
 	vpxor ymm0, ymm0, ymm0
