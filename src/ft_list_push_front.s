@@ -1,34 +1,44 @@
-global ft_list_push_front
-extern malloc
+global ft_list_push_front: function
 
-section .data
+extern malloc: function
 
-section .bss
+%use smartalign
+ALIGNMODE p6
+
+%define SIZEOF_QWORD 8
+%define SIZEOF_NODE 2*SIZEOF_QWORD
 
 section .text
-; Allocates a new node and push it front to a given list.
+; Allocates a new node and prepends it to a given linked-list.
 ; In case of error, sets errno properly.
 ;
 ; Parameters:
 ; rdi: the address of a pointer to the first node of the list to push to. (assumed to be a valid address)
 ; rsi: the address of the data to store in the new node to push.
+align 16
 ft_list_push_front:
-; reserve
+; preserve the volatile registers
 	push rdi
 	push rsi
-	mov rdi, 16
+; allocate the new node
+	mov rdi, SIZEOF_NODE
 	call malloc wrt ..plt
 ; check if malloc failed
 	test rax, rax
-	jz .return
+	jz .malloc_failed
+; restore the volatile registers
 	pop rsi
 	pop rdi
 ; initialize the `data` field
 	mov [rax], rsi
 ; initialize the `next` field
 	mov rsi, [rdi]
-	mov [rax + 8], rsi
-; update the list head
+	mov [rax+SIZEOF_QWORD], rsi
+; update the head of the list
 	mov [rdi], rax
-.return:
+	ret
+
+align 16
+.malloc_failed:
+	add rsp, 0x10 ; restore the stack pointer
 	ret
