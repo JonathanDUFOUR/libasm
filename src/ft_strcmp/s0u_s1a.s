@@ -142,7 +142,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0xFF:
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm13
-
 ;found_a_null_byte_between_the_indices_0x80_and_0xFF
 ; compare the next 4 ywords of both strings
 	vpcmpeqb ymm1, ymm1, [rsi+0x00]
@@ -164,7 +163,6 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x7F, ymm13
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm11
-
 ;found_a_null_byte_between_the_indices_0xC0_and_0xFF
 ; compare the next 2 ywords of both strings
 	vpcmpeqb ymm5, ymm5, [rsi+0x80]
@@ -178,7 +176,6 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x80_and_0xBF, ymm11
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0xC0_and_0xDF, ymm7
-
 ;found_a_null_byte_between_the_indices_0xE0_and_0xFF
 ; compare the next yword of both strings
 	vpcmpeqb ymm7, ymm7, [rsi+0xC0]
@@ -186,7 +183,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm8, [rsi+0xE0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0xF0_and_0xFF
-
 ;found_a_null_byte_between_the_indices_0xE0_and_0xEF
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -209,7 +205,6 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x3F, ymm9
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x40_and_0x5F, ymm3
-
 ;found_a_null_byte_between_the_indices_0x60_and_0x7F
 ; compare the next yword of both strings
 	vpcmpeqb ymm3, ymm3, [rsi+0x40]
@@ -217,7 +212,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm4, [rsi+0x60], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0x70_and_0x7F
-
 ;found_a_null_byte_between_the_indices_0x60_and_0x6F
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -227,7 +221,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0x3F:
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x1F, ymm1
-
 ;found_a_null_byte_between_the_indices_0x20_and_0x3F
 ; compare the next yword of both strings
 	vpcmpeqb ymm1, ymm1, [rsi+0x00]
@@ -235,7 +228,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm2, [rsi+0x20], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0x30_and_0x3F
-
 ;found_a_null_byte_between_the_indices_0x20_and_0x2F
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -246,7 +238,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm1, [rsi+0x00], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0x10_and_0x1F
-
 ;found_a_null_byte_between_the_indices_0x00_and_0x0F
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -275,7 +266,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm3, [rsi+0x40], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0x50_and_0x5F
-
 ;found_a_null_byte_between_the_indices_0x40_and_0x4F
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -302,7 +292,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x80_and_0xBF:
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0x9F, ymm5
-
 ;found_a_null_byte_between_the_indices_0xA0_and_0xBF
 ; compare the next yword of both strings
 	vpcmpeqb ymm5, ymm5, [rsi+0x80]
@@ -310,7 +299,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm6, [rsi+0xA0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0xB0_and_0xBF
-
 ;found_a_null_byte_between_the_indices_0xA0_and_0xAF
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -321,7 +309,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm5, [rsi+0x80], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0x90_and_0x9F
-
 ;found_a_null_byte_between_the_indices_0x80_and_0x8F
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -350,7 +337,6 @@ align 16
 ; figure out which oword contains the first null byte
 	pcmpistri xmm7, [rsi+0xC0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_null_byte_between_the_indices_0xD0_and_0xDF
-
 ;found_a_null_byte_between_the_indices_0xC0_and_0xCF
 ; compare the next oword of both strings
 	jnc .both_strings_completely_match
@@ -378,22 +364,18 @@ align 16
 .found_a_difference_between_the_indices_0x00_and_0xFF:
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x7F, ymm13
-
 ;found_a_difference_between_the_indices_0x80_and_0xFF
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x80_and_0xBF, ymm11
-
 ;found_a_difference_between_the_indices_0xC0_and_0xFF
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0xC0_and_0xDF, ymm7
-
 ;found_a_difference_between_the_indices_0xE0_and_0xFF
 ; load the yword of the first string that contains the mismatching byte
 	vmovdqu ymm8, [rdi+0xE0]
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm8, [rsi+0xE0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0xF0_and_0xFF
-
 ;found_a_difference_between_the_indices_0xE0_and_0xEF:
 	RETURN_DIFF 0xE0
 
@@ -401,18 +383,15 @@ align 16
 .found_a_difference_between_the_indices_0x00_and_0x7F:
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x3F, ymm9
-
 ;found_a_difference_between_the_indices_0x40_and_0x7F
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x40_and_0x5F, ymm3
-
 ;found_a_difference_between_the_indices_0x60_and_0x7F
 ; load the yword of the first string that contains the mismatching byte
 	vmovdqu ymm4, [rdi+0x60]
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm4, [rsi+0x60], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0x70_and_0x7F
-
 ;found_a_difference_between_the_indices_0x60_and_0x6F:
 	RETURN_DIFF 0x60
 
@@ -420,14 +399,12 @@ align 16
 .found_a_difference_between_the_indices_0x00_and_0x3F:
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x1F, ymm1
-
 ;found_a_difference_between_the_indices_0x20_and_0x3F
 ; load the yword of the first string that contains the mismatching byte
 	vmovdqu ymm2, [rdi+0x20]
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm2, [rsi+0x20], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0x30_and_0x3F
-
 ;found_a_difference_between_the_indices_0x20_and_0x2F
 	RETURN_DIFF 0x20
 
@@ -438,7 +415,6 @@ align 16
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm1, [rsi+0x00], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0x10_and_0x1F
-
 ;found_a_difference_between_the_indices_0x00_and_0x0F
 	RETURN_DIFF 0x00
 
@@ -465,7 +441,6 @@ align 16
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm3, [rsi+0x40], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0x50_and_0x5F
-
 ;found_a_difference_between_the_indices_0x40_and_0x4F
 	RETURN_DIFF 0x40
 
@@ -489,14 +464,12 @@ align 16
 .found_a_difference_between_the_indices_0x80_and_0xBF:
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x80_and_0x9F, ymm5
-
 ;found_a_difference_between_the_indices_0xA0_and_0xBF
 ; load the yword of the first string that contains the mismatching byte
 	vmovdqu ymm6, [rdi+0xA0]
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm6, [rsi+0xA0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0xB0_and_0xBF
-
 ;found_a_difference_between_the_indices_0xA0_and_0xAF
 	RETURN_DIFF 0xA0
 
@@ -507,7 +480,6 @@ align 16
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm5, [rsi+0x80], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0x90_and_0x9F
-
 ;found_a_difference_between_the_indices_0x80_and_0x8F
 	RETURN_DIFF 0x80
 
@@ -533,7 +505,6 @@ align 16
 ; figure out which oword contains the first mismatching byte
 	pcmpistri xmm7, [rsi+0xC0], EQUAL_EACH + NEGATIVE_POLARITY
 	ja .found_a_difference_between_the_indices_0xD0_and_0xDF
-
 ;found_a_difference_between_the_indices_0xC0_and_0xCF
 	RETURN_DIFF 0xC0
 

@@ -129,7 +129,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0xFF:
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm13
-
 ;found_a_null_byte_between_the_indices_0x80_and_0xFF
 ; compare the next 4 ywords of both strings
 	vpcmpeqb ymm1, ymm1, [rsi+0x00]
@@ -151,7 +150,6 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x00_and_0x7F, ymm13
 ; figure out which yword contains the first null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm11
-
 ;found_a_null_byte_between_the_indices_0xC0_and_0xFF
 ; compare the next 2 ywords of both strings
 	vpcmpeqb ymm5, ymm5, [rsi+0x80]
@@ -453,7 +451,6 @@ align 16
 .found_a_difference_between_the_indices_0x80_and_0xBF:
 ; figure out which yword contains the first mismatching byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_difference_between_the_indices_0x80_and_0x9F, ymm5
-
 ;found_a_difference_between_the_indices_0xA0_and_0xBF
 ; load the yword of the first string that contains the mismatching byte
 	vmovdqu ymm6, [rdi+0xA0]

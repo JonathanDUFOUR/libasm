@@ -128,7 +128,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0xFF:
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm13
-
 ;found_a_null_byte_between_the_indices_0x80_and_0xFF:
 ; store the next 4 ywords to the destination string
 	vmovdqa [rdi+0x00], ymm1
@@ -137,14 +136,12 @@ align 16
 	vmovdqa [rdi+0x60], ymm4
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm11
-
 ;found_a_null_byte_between_the_indices_0xC0_and_0xFF:
 ; store the next 2 ywords to the destination string
 	vmovdqa [rdi+0x80], ymm5
 	vmovdqa [rdi+0xA0], ymm6
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0xC0_and_0xDF, ymm7
-
 ;found_a_null_byte_between_the_indices_0xE0_and_0xFF:
 ; store the next yword to the destination string
 	vmovdqa [rdi+0xC0], ymm7
@@ -154,14 +151,12 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0x7F:
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x3F, ymm9
-
 ;found_a_null_byte_between_the_indices_0x40_and_0x7F:
 ; store the next 2 ywords to the destination string
 	vmovdqa [rdi+0x00], ymm1
 	vmovdqa [rdi+0x20], ymm2
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x40_and_0x5F, ymm3
-
 ;found_a_null_byte_between_the_indices_0x60_and_0x7F:
 ; store the next yword to the destination string
 	vmovdqa [rdi+0x40], ymm3
@@ -171,7 +166,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x00_and_0x3F:
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x1F, ymm1
-
 ;found_a_null_byte_between_the_indices_0x20_and_0x3F:
 ; store the next yword to the destination string
 	vmovdqa [rdi+0x00], ymm1
@@ -189,7 +183,6 @@ align 16
 .found_a_null_byte_between_the_indices_0x80_and_0xBF:
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0x9F, ymm5
-
 ;found_a_null_byte_between_the_indices_0xA0_and_0xBF:
 ; store the next yword to the destination string
 	vmovdqa [rdi+0x80], ymm5
