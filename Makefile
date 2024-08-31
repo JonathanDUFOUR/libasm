@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/08/08 02:11:54 by jodufour         ###   ########.fr        #
+#    Updated: 2024/08/30 17:31:31 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -102,7 +102,11 @@ endif
 #######################################
 #                RULES                #
 #######################################
-.PHONY: all bonus clean fclean re fre
+.PHONY: all
+all: ${NAME} ${NAME_BONUS}
+
+.PHONY: bonus
+bonus: ${NAME_BONUS}
 
 ${NAME}: ${OBJ}
 	${AR} $@ $^
@@ -111,22 +115,22 @@ ${NAME_BONUS}: ${OBJ_BONUS}
 	${AR} $@ $^
 	${AR} ${NAME} $^
 
-all: ${NAME} ${NAME_BONUS}
-
-bonus: ${NAME_BONUS}
-
 -include ${DEP} ${DEP_BONUS}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	@${MKDIR} ${@D}
 	${AS} ${AFLAGS} -MD ${@:.o=.d} $< ${OUTPUT_OPTION}
 
+.PHONY: clean
 clean:
 	${RM} ${OBJ_DIR} vgcore.*
 
+.PHONY: fclean
 fclean: clean
 	${RM} ${NAME} ${NAME_BONUS}
 
+.PHONY: re
 re: clean all
 
+.PHONY: fre
 fre: fclean all
