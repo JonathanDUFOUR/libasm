@@ -1,11 +1,11 @@
 global ft_strdup: function
 
-%use smartalign
-ALIGNMODE p6
-
 extern ft_memcpy: function
 extern ft_strlen: function
 extern malloc: function
+
+%use smartalign
+ALIGNMODE p6
 
 section .text
 ; Duplicates a string, using dynamic memory allocation.
@@ -19,19 +19,23 @@ section .text
 ; rax: the address of the newly allocated string, or NULL in case of error.
 align 16
 ft_strdup:
-; reserve
-	push rdi ; preserve the address of the source string
+; preserve the volatile registers
+	push rdi
+; calculate how many bytes we need to allocate
 	call ft_strlen
 	inc rax ; add 1 for the null-terminator
-	push rax ; preserve the number of bytes to allocate and to copy
+; preserve the volatile registers
+	push rax
+; allocate the new string
 	mov rdi, rax
 	call malloc wrt ..plt
 ; check if malloc failed
 	test rax, rax
 	jz .malloc_failed
-; copy
-	pop rdx ; restore the number of bytes to copy
-	pop rsi ; restore the address of the source string
+; restore the volatile registers
+	pop rdx
+	pop rsi
+; copy the source string into the new string
 	mov rdi, rax
 	jmp ft_memcpy
 
