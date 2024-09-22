@@ -517,12 +517,12 @@ align 16
 	mov rsp, rdx
 	ret
 
-section .rodata align=SIZEOF_YWORD
-	        HT: times SIZEOF_YWORD db 0x09
-	        VT: times SIZEOF_YWORD db 0x0B
-	        CR: times SIZEOF_YWORD db 0x0D
-	        LF: times SIZEOF_YWORD db 0x0A
-	        FF: times SIZEOF_YWORD db 0x0C
-	     space: times SIZEOF_YWORD db 0x20
-	 plus_sign: times SIZEOF_YWORD db 0x2B
-	minus_sign: times SIZEOF_YWORD db 0x2D
+section .rodata
+        HT: times SIZEOF_YWORD db 0x09
+        VT: times SIZEOF_YWORD db 0x0B
+        CR: times SIZEOF_YWORD db 0x0D
+        LF: times SIZEOF_YWORD db 0x0A
+        FF: times SIZEOF_YWORD db 0x0C
+     space: times SIZEOF_YWORD db 0x20
+ plus_sign: times SIZEOF_YWORD db 0x2B
+minus_sign: times SIZEOF_YWORD db 0x2D
