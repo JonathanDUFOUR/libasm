@@ -1,15 +1,33 @@
-global ft_atoi_base
+global ft_atoi_base: function
 
-section .data
-	array times 256 db 0xff
+default rel
 
-section .bss
+%use smartalign
+ALIGNMODE p6
+
+%define SIZEOF_BYTE  1
+%define SIZEOF_QWORD 8
+%define SIZEOF_YWORD 32
+
+%define SIZEOF_ARRAY_OF_DIGITS 256*SIZEOF_BYTE
+
+; Parameters:
+; %1: the label to jump to if the given YMM register contains no null byte
+; %3: the yword to use as mask
+; %2: the yword to check
+;
+; Note: ymm0 is assumed to be filled with zeros.
+%macro JUMP_IF_HAS_NO_NULL_BYTE 3
+	vpcmpeqb %2, ymm0, %3
+	vptest %2, %2
+	jz %1
+%endmacro
 
 section .text
-; Parses a string into an integer, according to the given base.
+; Parses a string into an integer, using a custom base.
 ; The base must be at least 2 characters long. It must not contain
 ; any duplicate characters, nor any of the following:
-; `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
+; `%x09-0D / %x20 / %x2B / %x2D`
 ;
 ; Parameters:
 ; rdi: the address of the string to parse. (assumed to be a valid address)
@@ -19,110 +37,492 @@ section .text
 ; eax:
 ; - the parsed integer value if the base is valid.
 ; - 0 otherwise.
+align 16
 ft_atoi_base:
-; check if the base is valid
-	lea r8, [rel array] ; REMIND: why need `rel` keyword?
-	mov rax, 0x0000ac0100003e00 ; the bit field that represents the invalid characters
-	xor rdx, rdx
+; preserve the non-volatile registers
+	mov rdx, rsp
+; preliminary initialization
+	sub rsp, SIZEOF_ARRAY_OF_DIGITS
+	and rsp, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+	xor eax, eax
+	vpxor ymm0, ymm0, ymm0
+	vpcmpeqb ymm11, ymm11, ymm11
+%assign offset 0x00
+%rep 8
+	vmovdqa [rsp+offset], ymm11
+	%assign offset offset+0x20
+%endrep
+; load 4 of the maximum 8 ywords of the base
+; (a valid base can contain at most 247 characters, which always fit 8 ywords)
+	vmovdqu ymm1, [rsi+0x00]
+	vmovdqu ymm2, [rsi+0x40]
+	vmovdqu ymm3, [rsi+0x80]
+	vmovdqu ymm4, [rsi+0xC0]
+; merge the ywords into one that will contain their minimum byte values
+; (see the diagram below for a more visual representation of the process)
+	vpminub ymm5,  ymm1, [rsi+0x20]
+	vpminub ymm6,  ymm2, [rsi+0x60]
+	vpminub ymm7,  ymm3, [rsi+0xA0]
+	vpminub ymm8,  ymm4, [rsi+0xE0]
+	vpminub ymm9,  ymm5, ymm6
+	vpminub ymm10, ymm7, ymm8
+	vpminub ymm11, ymm9, ymm10
+;                    ,---ymm1  base[0x00..=0x1F]
+;            ,----ymm5
+;            |       '-------  base[0x20..=0x3F]
+;     ,---ymm9
+;     |      |       ,---ymm2  base[0x40..=0x5F]
+;     |      '----ymm6
+;     |              '-------  base[0x60..=0x7F]
+; ymm11
+;     |              ,---ymm3  base[0x80..=0x9F]
+;     |       ,---ymm7
+;     |       |      '-------  base[0xA0..=0xBF]
+;     '---ymm10
+;             |      ,---ymm4  base[0xC0..=0xDF]
+;             '---ymm8
+;                    '-------  base[0xE0..=0xFF]
+	JUMP_IF_HAS_NO_NULL_BYTE .return, ymm12, ymm11
+;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0xFF:
+; initialize registers for the upcoming processing
 	xor rcx, rcx
-.check_base_characters:
-	mov dl, [rsi + rcx]
-; check if the end of string has been reached
-	test dl, dl
-	jz .check_base_length
-; check if the current character is any of `%x09-0d / %x20 / %x2a-2b / %x2d / %x2f`
-	cmp dl, 0x2f
-	ja .check_duplicate
-	bt rax, rdx
-	jc .return_zero
-.check_duplicate:
-; check if the current character has already been encountered
-	cmp byte [r8 + rdx], 0xff ; REMIND: why can't we just do `cmp byte [array + rdx], 0xff`?
-	jne .return_zero
-; save the value as a digit of the current character
-	mov [r8 + rdx], cl ; REMIND: why can't we just do `mov [array + rdx], cl`?
-; update the base index
-	inc cl
-; repeat until either the end of the string is reached or an invalid character is encountered
-	jmp .check_base_characters
-.check_base_length:
-; check if the base is at least 2 characters long
-	test cl, 0xfe
-	jz .return_zero
-; parse the string
-	mov rax, 0x100003e00 ; the bit field that represents the whitespace characters
-.skip_whitespaces:
-	mov dl, [rdi]
-; check if the end of string has been reached
-	test dl, dl
-	jz .return_zero
-; check if the current character is any of `%x09-0d / %x20`
-	bt rax, rdx
-	jnc .compute_sign
+	xor r8, r8 ; the base length
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xFF, ymm13, ymm9
+;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x7F:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x7F, ymm14, ymm5
+;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x3F:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x20_and_0x3F, ymm15, ymm1
+;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x1F:
+	vpmovmskb r9, ymm15
+	jmp .check_and_save_the_last_partial_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xFF:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xFF, ymm14, ymm7
+;found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xBF:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xA0_and_0xBF, ymm15, ymm3
+;found_a_null_byte_in_the_base_between_the_indices_0x80_and_0x9F:
+	mov r11b, 4
+	vpmovmskb r9, ymm15
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xFF:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xE0_and_0xFF, ymm15, ymm4
+;found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xDF:
+	mov r11b, 6
+	vpmovmskb r9, ymm15
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0xE0_and_0xFF:
+	mov r11b, 7
+	vpmovmskb r9, ymm12
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0xA0_and_0xBF:
+	mov r11b, 5
+	vpmovmskb r9, ymm14
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x7F:
+; figure out which yword contains the first null byte
+	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x60_and_0x7F, ymm15, ymm2
+;found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x5F:
+	mov r11b, 2
+	vpmovmskb r9, ymm15
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0x60_and_0x7F:
+	mov r11b, 3
+	vpmovmskb r9, ymm13
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.found_a_null_byte_in_the_base_between_the_indices_0x20_and_0x3F:
+	mov r11b, 1
+	vpmovmskb r9, ymm14
+	vpxor ymm15, ymm15, ymm15
+	jmp .check_and_save_the_next_yword_of_the_base_as_digits
+
+align 16
+.check_and_save_the_next_yword_of_the_base_as_digits:
+; load the next yword from the base
+	vmovdqu ymm0, [rsi]
+; compare the yword with the forbidden characters
+	vpcmpeqb ymm1, ymm0, [HT]
+	vpcmpeqb ymm2, ymm0, [VT]
+	vpcmpeqb ymm3, ymm0, [CR]
+	vpcmpeqb ymm4, ymm0, [LF]
+	vpcmpeqb ymm5, ymm0, [FF]
+	vpcmpeqb ymm6, ymm0, [space]
+	vpcmpeqb ymm7, ymm0, [plus_sign]
+	vpcmpeqb ymm8, ymm0, [minus_sign]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm9,  ymm1,  ymm2
+	vpor ymm10, ymm3,  ymm4
+	vpor ymm11, ymm5,  ymm6
+	vpor ymm12, ymm7,  ymm8
+	vpor ymm13, ymm9,  ymm10
+	vpor ymm14, ymm11, ymm12
+	vpor ymm15, ymm13, ymm14
+;                    ,----ymm1  vpcmpeqb ymm0, [HT]
+;             ,---ymm9
+;             |      '----ymm2  vpcmpeqb ymm0, [VT]
+;     ,---ymm13
+;     |       |       ,---ymm3  vpcmpeqb ymm0, [CR]
+;     |       '---ymm10
+;     |               '---ymm4  vpcmpeqb ymm0, [LF]
+; ymm15
+;     |               ,---ymm5  vpcmpeqb ymm0, [FF]
+;     |       ,---ymm11
+;     |       |       '---ymm6  vpcmpeqb ymm0, [space]
+;     '---ymm14
+;             |       ,---ymm7  vpcmpeqb ymm0, [plus_sign]
+;             '---ymm12
+;                     '---ymm8  vpcmpeqb ymm0, [minus_sign]
+
+; check that the yword contains no forbidden characters
+	vptest ymm15, ymm15
+	jnz .return
+; iterate over each byte of the current ywordd
+	mov ecx, SIZEOF_YWORD
+align 16
+.check_and_save_the_next_digit_of_the_current_yword:
+; load the next digit from the base
+	movzx r10, byte [rsi+r8]
+; check for duplicate
+	cmp byte [rsp+r10], -1
+	jne .return
+; save the digit in the internal array
+	mov [rsp+r10], r8b
+; update the base pointer and the digit value
+	inc r8b
+; repeat until the entire yword is processed
+	loop .check_and_save_the_next_digit_of_the_current_yword
+; update the number of ywords to check and save as digits
+	dec r11b
+; repeat until all the ywords are processed
+	jnz .check_and_save_the_next_yword_of_the_base_as_digits
+align 16
+.check_and_save_the_last_partial_yword_of_the_base_as_digits:
+; calculate the index of the null byte in the last partial yword of the base
+; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
+	test ecx, ecx
+	jz .parse_the_string
+; load the next yword from the base
+	vmovdqu ymm0, [rsi]
+; compare the yword with the forbidden characters
+	vpcmpeqb ymm1, ymm0, [HT]
+	vpcmpeqb ymm2, ymm0, [VT]
+	vpcmpeqb ymm3, ymm0, [CR]
+	vpcmpeqb ymm4, ymm0, [LF]
+	vpcmpeqb ymm5, ymm0, [FF]
+	vpcmpeqb ymm6, ymm0, [space]
+	vpcmpeqb ymm7, ymm0, [plus_sign]
+	vpcmpeqb ymm8, ymm0, [minus_sign]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm9,  ymm1,  ymm2
+	vpor ymm10, ymm3,  ymm4
+	vpor ymm11, ymm5,  ymm6
+	vpor ymm12, ymm7,  ymm8
+	vpor ymm13, ymm9,  ymm10
+	vpor ymm14, ymm11, ymm12
+	vpor ymm15, ymm13, ymm14
+;                    ,----ymm1  vpcmpeqb ymm0, [HT]
+;             ,---ymm9
+;             |      '----ymm2  vpcmpeqb ymm0, [VT]
+;     ,---ymm13
+;     |       |       ,---ymm3  vpcmpeqb ymm0, [CR]
+;     |       '---ymm10
+;     |               '---ymm4  vpcmpeqb ymm0, [LF]
+; ymm15
+;     |               ,---ymm5  vpcmpeqb ymm0, [FF]
+;     |       ,---ymm11
+;     |       |       '---ymm6  vpcmpeqb ymm0, [space]
+;     '---ymm14
+;             |       ,---ymm7  vpcmpeqb ymm0, [plus_sign]
+;             '---ymm12
+;                     '---ymm8  vpcmpeqb ymm0, [minus_sign]
+
+; extract the bit mask of the comparison
+	vpmovmskb r11, ymm15
+; ignore the unwanted trailing bytes
+	mov r10b, SIZEOF_YWORD
+	sub r10b, cl
+; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
+	shlx r11d, r11d, r10d
+; check that the partial yword contains no forbidden characters
+	test r11d, r11d
+	jnz .return
+align 16
+.check_and_save_the_next_digit_of_the_last_partial_yword:
+; load the next digit from the base
+	movzx r10, byte [rsi+r8]
+; check for duplicate
+	cmp byte [rsp+r10], -1
+	jne .return
+; save the digit in the internal array
+	mov [rsp+r10], r8b
+; update the base pointer and the digit value
+	inc r8b
+; repeat until the entire yword is processed
+	loop .check_and_save_the_next_digit_of_the_last_partial_yword
+; check that the base is at least 2 digits long
+	cmp r8b, 2
+	jb .return
+align 16
+.parse_the_string:
+; load the first yword from the string
+	vmovdqu ymm12, [rdi]
+; compare the yword with the whitespaces
+	vpcmpeqb ymm1,  ymm12, [HT]
+	vpcmpeqb ymm3,  ymm12, [VT]
+	vpcmpeqb ymm5,  ymm12, [CR]
+	vpcmpeqb ymm7,  ymm12, [LF]
+	vpcmpeqb ymm9,  ymm12, [FF]
+	vpcmpeqb ymm11, ymm12, [space]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm2,  ymm1, ymm3
+	vpor ymm6,  ymm5, ymm7
+	vpor ymm10, ymm9, ymm11
+	vpor ymm4,  ymm2, ymm6
+	vpor ymm8,  ymm4, ymm10
+;                  ,----ymm1   vpcmpeqb ymm12, [HT]
+;           ,---ymm2
+;           |      '----ymm3   vpcmpeqb ymm12, [VT]
+;    ,---ymm4
+;    |      |      ,----ymm5   vpcmpeqb ymm12, [CR]
+;    |      '---ymm6
+;    |             '----ymm7   vpcmpeqb ymm12, [LF]
+; ymm8
+;    |              ,---ymm9   vpcmpeqb ymm12, [FF]
+;    '----------ymm10
+;                   '---ymm11  vpcmpeqb ymm12, [space]
+
+; check if the yword contains a non-whitespace character
+	vpmovmskb r9, ymm8
+	cmp r9d, -1
+	jne .advance_to_the_first_non_whitespace_character
+; align the string pointer to the next yword boundary
+	add rdi,  SIZEOF_YWORD
+	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+align 16
+.look_for_non_whitespace_characters_in_the_next_yword:
+; load the next yword from the string
+	vmovdqa ymm12, [rdi]
+; compare the yword with the whitespaces
+	vpcmpeqb ymm1,  ymm12, [HT]
+	vpcmpeqb ymm3,  ymm12, [VT]
+	vpcmpeqb ymm5,  ymm12, [CR]
+	vpcmpeqb ymm7,  ymm12, [LF]
+	vpcmpeqb ymm9,  ymm12, [FF]
+	vpcmpeqb ymm11, ymm12, [space]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm2,  ymm1, ymm3
+	vpor ymm6,  ymm5, ymm7
+	vpor ymm10, ymm9, ymm11
+	vpor ymm4,  ymm2, ymm6
+	vpor ymm8,  ymm4, ymm10
+;                  ,----ymm1   vpcmpeqb ymm12, [HT]
+;           ,---ymm2
+;           |      '----ymm3   vpcmpeqb ymm12, [VT]
+;    ,---ymm4
+;    |      |      ,----ymm5   vpcmpeqb ymm12, [CR]
+;    |      '---ymm6
+;    |             '----ymm7   vpcmpeqb ymm12, [LF]
+; ymm8
+;    |              ,---ymm9   vpcmpeqb ymm12, [FF]
+;    '----------ymm10
+;                   '---ymm11  vpcmpeqb ymm12, [space]
+
+; check if the yword contains a non-whitespace character
+	vpmovmskb r9, ymm8
+	cmp r9d, -1
+	jne .advance_to_the_first_non_whitespace_character
 ; update the string pointer
-	inc rdi
-; repeat until either the end of string is reached or a non-whitespace character is encountered
-	jmp .skip_whitespaces
-.compute_sign:
-	xor r9b, r9b
-	mov r10b, [rsi] ; save the null digit for later operations
-; check if the first non-whitespace character is a sign `%x2b / %x2d`
-	sub dl, 0x2b
-	test dl, 0xfd
-	jnz .skip_leading_null_digits
-; save whether it is the minus sign `%x2d`
-	test dl, dl
-	setnz r9b
+	add rdi, SIZEOF_YWORD
+; repeat until a non-whitespace character is found
+	jmp .look_for_non_whitespace_characters_in_the_next_yword
+
+align 16
+.advance_to_the_first_non_whitespace_character:
+; calculate the index of the first non-whitespace character in the next yword of the string
+	not r9d
+; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
 ; update the string pointer
-	inc rdi
-.skip_leading_null_digits:
-	mov dl, [rdi]
-; check if the end of string has been reached
-	test dl, dl
-	jz .return_zero
-; check if the current character is the null digit
-	cmp dl, r10b
-	jne .no_more_leading_null_digit
+	add rdi, rcx
+; broadcast the zero-digit to the YMM register for the upcoming comparisons
+	vpbroadcastb ymm0, [rsi]
+; initialize the number of minus signs encountered
+	xor rsi, rsi
+; calculate how far the string pointer is to its previous yword boundary
+	mov r9, rdi
+	and r9, SIZEOF_YWORD-1 ; modulo SIZEOF_YWORD
+; align the string pointer to its previous yword boundary
+	sub rdi, r9
+; load the first aligned yword from the string that contains a sign
+	vmovdqa ymm13, [rdi]
+; compare the yword with the signs
+	vpcmpeqb ymm5, ymm13, [plus_sign]
+	vpcmpeqb ymm7, ymm13, [minus_sign]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm6, ymm5, ymm7
+;    ,---ymm5   vpcmpeqb ymm13, [plus_sign]
+; ymm6
+;    '---ymm7   vpcmpeqb ymm13, [minus_sign]
+
+; extract the bit masks of the comparisons
+	vpmovmskb r10, ymm6
+	vpmovmskb r11, ymm7
+; reverse the sign-mask to represent the non-sign characters
+	not r10d
+; ignore the unwanted leading bytes
+; REMIND: this is for little-endian. Use shlx instead of shrx for big-endian.
+	shrx r10d, r10d, r9d
+	shrx r11d, r11d, r9d
+; check if the yword contains a non-sign character
+	test r10d, r10d
+	jz .process_the_signs
 ; update the string pointer
-	inc rdi
-; repeat until either the end of string is reached or a non-null digit character is encountered
-	jmp .skip_leading_null_digits
-.no_more_leading_null_digit:
-	xor rax, rax
-	xor r10d, r10d
-.compute_significant_digits:
-; check if the end of string has been reached
-	test dl, dl
-	jz .no_more_significant_digit
-; get + check the value as a digit of the current character
-	mov r10b, [r8 + rdx] ; REMIND: why can't we just do `mov r10b, [array + dl]`?
-	cmp r10b, 0xff
-	je .no_more_significant_digit
-; compute the current value into the final result
-	mul ecx
+	add rdi, r9
+	jmp .advance_to_the_first_non_sign_character
+
+align 16
+.process_the_signs:
+	popcnt r11d, r11d
+	add rsi, r11
+; update the string pointer
+	add rdi, SIZEOF_YWORD
+; load the next yword from the string
+	vmovdqa ymm13, [rdi]
+; compare the yword with the signs
+	vpcmpeqb ymm5, ymm13, [plus_sign]
+	vpcmpeqb ymm7, ymm13, [minus_sign]
+; merge the comparison results into 1 yword
+; (see the diagram below for a more visual representation of the process)
+	vpor ymm6, ymm5, ymm7
+;    ,---ymm5   vpcmpeqb ymm13, [plus_sign]
+; ymm6
+;    '---ymm7   vpcmpeqb ymm13, [minus_sign]
+
+; extract the bit masks of the comparisons
+	vpmovmskb r10, ymm6
+	vpmovmskb r11, ymm7
+; reverse the sign-mask to represent the non-sign characters
+	not r10d
+; check if the yword contains a non-sign character
+	test r10d, r10d
+	jz .process_the_signs
+align 16
+.advance_to_the_first_non_sign_character:
+; calculate the index of the first non-sign character in the next yword of the string
+; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r10d
+; ignore the unwanted trailing bytes
+	mov r9b, SIZEOF_YWORD-1
+	sub r9b, cl
+; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
+	shlx r11d, r11d, r9d
+; process the minus signs
+	popcnt r11d, r11d
+	add rsi, r11
+; update the string pointer
+	add rdi, rcx
+align 16
+.process_the_leading_zeros:
+; load the next yword from the string
+	vmovdqu ymm14, [rdi]
+; compare the yword with the zero-digit
+	vpcmpeqb ymm1, ymm14, ymm0
+; check if the yword contains a non-zero-digit character
+	vpmovmskb r9, ymm1
+	cmp r9d, -1
+	jne .advance_to_the_first_non_zero_digit_character
+; align the string pointer to the next yword boundary
+	add rdi,  SIZEOF_YWORD
+	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+align 16
+.look_for_non_zero_digit_characters_in_the_next_yword:
+; load the next yword from the string
+	vmovdqa ymm14, [rdi]
+; compare the yword with the zero-digit
+	vpcmpeqb ymm1, ymm14, ymm0
+; check if the yword contains a non-zero-digit character
+	vpmovmskb r9, ymm1
+	cmp r9d, -1
+	jne .advance_to_the_first_non_zero_digit_character
+; update the string pointer
+	add rdi, SIZEOF_YWORD
+; repeat until a non-zero-digit character is found
+	jmp .look_for_non_zero_digit_characters_in_the_next_yword
+
+align 16
+.advance_to_the_first_non_zero_digit_character:
+; calculate the index of the first non-zero-digit character in the next yword of the string
+	not r9d
+; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
+; update the string pointer
+	add rdi, rcx
+align 16
+.process_the_next_character:
+; load the digit value of the next character of the string
+	movzx r10, byte [rdi]
+	movzx r10, byte [rsp+r10]
+; check if the character is a digit
+	cmp r10b, -1
+	je .apply_the_sign
+; update the integer value
+	imul eax, r8d
 	add eax, r10d
-; step to the next character
+; update the string pointer
 	inc rdi
-	mov dl, [rdi]
-; repeat until either the end of string is reached or a non-digit character is encountered
-	jmp .compute_significant_digits
-.no_more_significant_digit:
-; apply the sign to the final result
-	test r9b, r9b
-	jz .restore_array_values
-	neg eax
-.restore_array_values:
-; check if every previously set value has been cleared
-	test cl, cl
+; repeat until the next character is not a digit
+	jmp .process_the_next_character
+
+align 16
+.apply_the_sign:
+	and rsi, 1 ; modulo 2
+	test rsi, rsi
 	jz .return
-; reset the default value for the `cl`th characters of the base
-	dec cl
-	mov dl, [rsi + rcx]
-	mov byte [r8 + rdx], 0xff
-; repeat until every previously set value is cleared
-	jmp .restore_array_values
+	neg eax
+align 16
 .return:
+; clean the upper part of the YMM registers
+	vzeroupper
+; restore the non-volatile registers
+	mov rsp, rdx
 	ret
-.return_zero:
-	xor rax, rax
-	jmp .restore_array_values
+
+section .rodata align=SIZEOF_YWORD
+	        HT: times SIZEOF_YWORD db 0x09
+	        VT: times SIZEOF_YWORD db 0x0B
+	        CR: times SIZEOF_YWORD db 0x0D
+	        LF: times SIZEOF_YWORD db 0x0A
+	        FF: times SIZEOF_YWORD db 0x0C
+	     space: times SIZEOF_YWORD db 0x20
+	 plus_sign: times SIZEOF_YWORD db 0x2B
+	minus_sign: times SIZEOF_YWORD db 0x2D
