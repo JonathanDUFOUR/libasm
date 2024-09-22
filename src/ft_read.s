@@ -1,9 +1,9 @@
 global ft_read: function
 
+extern __errno_location: function
+
 %use smartalign
 ALIGNMODE p6
-
-extern __errno_location: function
 
 section .text
 ; Reads N bytes from a file descriptor into a buffer.

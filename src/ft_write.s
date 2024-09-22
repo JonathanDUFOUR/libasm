@@ -1,9 +1,9 @@
 global ft_write: function
 
+extern __errno_location: function
+
 %use smartalign
 ALIGNMODE p6
-
-extern __errno_location: function
 
 section .text
 ; Writes N bytes from a buffer into a file descriptor.
