@@ -518,7 +518,7 @@ align 16
 	vmovdqa [rdi+0x1E0], ymm15
 	CLEAN_RET
 
-section .data.rel.ro.local
+section .rodata
 .small_copy_jump_table:
 	dq .copy_1_yword
 	dq .copy_2_ywords
