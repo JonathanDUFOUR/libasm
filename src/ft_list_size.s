@@ -19,12 +19,12 @@ ft_list_size:
 .loop:
 ; check if the end of the list has been reached
 	test rdi, rdi
-	jz .end_of_loop
+	jz .return
 ; increment the counter
 	inc rax
 ; step to the next node
 	mov rdi, [rdi+SIZEOF_QWORD]
 ; repeat until the end of the list is reached
 	jmp .loop
-.end_of_loop:
+.return:
 	ret
