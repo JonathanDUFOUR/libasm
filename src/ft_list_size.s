@@ -1,8 +1,9 @@
-global ft_list_size
+global ft_list_size: function
 
-section .data
+%use smartalign
+ALIGNMODE p6
 
-section .bss
+%define SIZEOF_QWORD 8
 
 section .text
 ; Calculates how many nodes a given list contains.
@@ -12,6 +13,7 @@ section .text
 ;
 ; Return:
 ; rax: the number of nodes in the list.
+align 16
 ft_list_size:
 	xor rax, rax
 .loop:
@@ -21,7 +23,7 @@ ft_list_size:
 ; increment the counter
 	inc rax
 ; step to the next node
-	mov rdi, [rdi + 8]
+	mov rdi, [rdi+SIZEOF_QWORD]
 ; repeat until the end of the list is reached
 	jmp .loop
 .end_of_loop:
