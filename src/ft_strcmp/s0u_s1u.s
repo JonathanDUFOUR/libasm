@@ -99,13 +99,13 @@ align 16
 	vpcmpeqb ymm8, ymm8, [ rsi + 7 * SIZEOF_YWORD ]
 ; merge the 8 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm9,  ymm1,  ymm2
-	vpminub ymm10, ymm3,  ymm4
-	vpminub ymm11, ymm5,  ymm6
-	vpminub ymm12, ymm7,  ymm8
-	vpminub ymm13, ymm9,  ymm10
-	vpminub ymm14, ymm11, ymm12
-	vpminub ymm15, ymm13, ymm14
+	vpand ymm9,  ymm1,  ymm2
+	vpand ymm10, ymm3,  ymm4
+	vpand ymm11, ymm5,  ymm6
+	vpand ymm12, ymm7,  ymm8
+	vpand ymm13, ymm9,  ymm10
+	vpand ymm14, ymm11, ymm12
+	vpand ymm15, ymm13, ymm14
 ;                    ,----ymm1  vpcmpeqb s0[0x00..=0x1F], s1[0x00..=0x1F]
 ;             ,---ymm9
 ;             |      '----ymm2  vpcmpeqb s0[0x20..=0x3F], s1[0x20..=0x3F]
@@ -143,9 +143,9 @@ align 16
 	vpcmpeqb ymm4, ymm4, [ rsi + 3 * SIZEOF_YWORD ]
 ; merge the 4 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm9,  ymm1, ymm2
-	vpminub ymm10, ymm3, ymm4
-	vpminub ymm13, ymm9, ymm10
+	vpand ymm9,  ymm1, ymm2
+	vpand ymm10, ymm3, ymm4
+	vpand ymm13, ymm9, ymm10
 ;            ,----ymm1 vpcmpeqb s0[0x00..=0x1F], s1[0x00..=0x1F]
 ;     ,---ymm9
 ;     |      '----ymm2 vpcmpeqb s0[0x20..=0x3F], s1[0x20..=0x3F]
@@ -164,7 +164,7 @@ align 16
 	vpcmpeqb ymm6, ymm6, [ rsi + 5 * SIZEOF_YWORD ]
 ; merge the 2 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm11,  ymm5, ymm6
+	vpand ymm11, ymm5, ymm6
 ;     ,----ymm5 vpcmpeqb s0[0x80..=0x9F], s1[0x80..=0x9F]
 ; ymm11
 ;     '----ymm6 vpcmpeqb s0[0xA0..=0xBF], s1[0xA0..=0xBF]
@@ -195,7 +195,7 @@ align 16
 	vpcmpeqb ymm2, ymm2, [ rsi + 1 * SIZEOF_YWORD ]
 ; merge the 2 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm9,  ymm1, ymm2
+	vpand ymm9, ymm1, ymm2
 ;    ,----ymm1 vpcmpeqb s0[0x00..=0x1F], s1[0x00..=0x1F]
 ; ymm9
 ;    '----ymm2 vpcmpeqb s0[0x20..=0x3F], s1[0x20..=0x3F]
