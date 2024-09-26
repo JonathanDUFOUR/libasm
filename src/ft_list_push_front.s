@@ -6,7 +6,8 @@ extern malloc: function
 ALIGNMODE p6
 
 %define SIZEOF_QWORD 8
-%define SIZEOF_NODE 2*SIZEOF_QWORD
+
+%define SIZEOF_NODE 2 * SIZEOF_QWORD
 
 section .text
 ; Allocates a new node and prepends it to a given linked-list.
@@ -30,15 +31,15 @@ ft_list_push_front:
 	pop rsi
 	pop rdi
 ; initialize the `data` field
-	mov [rax], rsi
+	mov [ rax ], rsi
 ; initialize the `next` field
-	mov rsi, [rdi]
-	mov [rax+SIZEOF_QWORD], rsi
+	mov rsi, [ rdi ]
+	mov [ rax + SIZEOF_QWORD ], rsi
 ; update the head of the list
-	mov [rdi], rax
+	mov [ rdi ], rax
 	ret
 
 align 16
 .malloc_failed:
-	add rsp, 0x10 ; restore the stack pointer
+	add rsp, 2 * SIZEOF_QWORD ; restore the stack pointer
 	ret

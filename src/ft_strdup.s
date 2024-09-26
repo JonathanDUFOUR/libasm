@@ -7,6 +7,8 @@ extern malloc: function
 %use smartalign
 ALIGNMODE p6
 
+%define SIZEOF_QWORD 8
+
 section .text
 ; Duplicates a string, using dynamic memory allocation.
 ; The source string is assumed to be null-terminated.
@@ -41,5 +43,5 @@ ft_strdup:
 
 align 16
 .malloc_failed:
-	add rsp, 0x10 ; restore the stack pointer
+	add rsp, 2 * SIZEOF_QWORD ; restore the stack pointer
 	ret

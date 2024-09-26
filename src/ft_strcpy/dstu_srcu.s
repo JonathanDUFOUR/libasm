@@ -23,15 +23,16 @@ ALIGNMODE p6
 ; %1: the number of ywords to advance both the destination pointer and the source pointer by.
 ; %2: the YMM register that contains the first null byte.
 %macro COPY_THE_LAST_BYTES_UP_TO_32 2
+%if %1 > 0
 ; update the pointers
 	add rdi, %1 * SIZEOF_YWORD
 	add rsi, %1 * SIZEOF_YWORD
+%endif
 ; calculate the index of the first null byte in the given YMM register
 	vpcmpeqb ymm0, ymm0, %2
 	vpmovmskb rdx, ymm0
-; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
-	bsf edx, edx
-	jmp .copy_between_1_and_32_bytes
+	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	jmp .copy_the_last_bytes
 %endmacro
 
 %macro CLEAN_RET 0
@@ -58,15 +59,15 @@ ft_strcpy_dstu_srcu:
 	vpxor ymm0, ymm0, ymm0
 align 16
 .check_the_next_8_ywords:
-; load the next 8 ywords of the source string
-	vmovdqu ymm1, [rsi+0x00]
-	vmovdqu ymm2, [rsi+0x20]
-	vmovdqu ymm3, [rsi+0x40]
-	vmovdqu ymm4, [rsi+0x60]
-	vmovdqu ymm5, [rsi+0x80]
-	vmovdqu ymm6, [rsi+0xA0]
-	vmovdqu ymm7, [rsi+0xC0]
-	vmovdqu ymm8, [rsi+0xE0]
+; load the next 8 ywords from the source string
+	vmovdqu ymm1, [ rsi + 0 * SIZEOF_YWORD ]
+	vmovdqu ymm2, [ rsi + 1 * SIZEOF_YWORD ]
+	vmovdqu ymm3, [ rsi + 2 * SIZEOF_YWORD ]
+	vmovdqu ymm4, [ rsi + 3 * SIZEOF_YWORD ]
+	vmovdqu ymm5, [ rsi + 4 * SIZEOF_YWORD ]
+	vmovdqu ymm6, [ rsi + 5 * SIZEOF_YWORD ]
+	vmovdqu ymm7, [ rsi + 6 * SIZEOF_YWORD ]
+	vmovdqu ymm8, [ rsi + 7 * SIZEOF_YWORD ]
 ; merge the 8 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
 	vpminub ymm9,  ymm1,  ymm2
@@ -91,16 +92,18 @@ align 16
 ;             |       ,---ymm7  src[0xC0..=0xDF]
 ;             '---ymm12
 ;                     '---ymm8  src[0xE0..=0xFF]
+
+; check if the resulting yword contains a null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0xFF, ymm15
 ; store the next 8 ywords to the destination string
-	vmovdqu [rdi+0x00], ymm1
-	vmovdqu [rdi+0x20], ymm2
-	vmovdqu [rdi+0x40], ymm3
-	vmovdqu [rdi+0x60], ymm4
-	vmovdqu [rdi+0x80], ymm5
-	vmovdqu [rdi+0xA0], ymm6
-	vmovdqu [rdi+0xC0], ymm7
-	vmovdqu [rdi+0xE0], ymm8
+	vmovdqu [ rdi + 0 * SIZEOF_YWORD ], ymm1
+	vmovdqu [ rdi + 1 * SIZEOF_YWORD ], ymm2
+	vmovdqu [ rdi + 2 * SIZEOF_YWORD ], ymm3
+	vmovdqu [ rdi + 3 * SIZEOF_YWORD ], ymm4
+	vmovdqu [ rdi + 4 * SIZEOF_YWORD ], ymm5
+	vmovdqu [ rdi + 5 * SIZEOF_YWORD ], ymm6
+	vmovdqu [ rdi + 6 * SIZEOF_YWORD ], ymm7
+	vmovdqu [ rdi + 7 * SIZEOF_YWORD ], ymm8
 ; update the pointers
 	add rdi, 8 * SIZEOF_YWORD
 	add rsi, 8 * SIZEOF_YWORD
@@ -113,21 +116,21 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm13
 ;found_a_null_byte_between_the_indices_0x80_and_0xFF:
 ; store the next 4 ywords to the destination string
-	vmovdqu [rdi+0x00], ymm1
-	vmovdqu [rdi+0x20], ymm2
-	vmovdqu [rdi+0x40], ymm3
-	vmovdqu [rdi+0x60], ymm4
+	vmovdqu [ rdi + 0 * SIZEOF_YWORD ], ymm1
+	vmovdqu [ rdi + 1 * SIZEOF_YWORD ], ymm2
+	vmovdqu [ rdi + 2 * SIZEOF_YWORD ], ymm3
+	vmovdqu [ rdi + 3 * SIZEOF_YWORD ], ymm4
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm11
 ;found_a_null_byte_between_the_indices_0xC0_and_0xFF:
 ; store the next 2 ywords to the destination string
-	vmovdqu [rdi+0x80], ymm5
-	vmovdqu [rdi+0xA0], ymm6
+	vmovdqu [ rdi + 4 * SIZEOF_YWORD ], ymm5
+	vmovdqu [ rdi + 5 * SIZEOF_YWORD ], ymm6
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0xC0_and_0xDF, ymm7
 ;found_a_null_byte_between_the_indices_0xE0_and_0xFF:
 ; store the next yword to the destination string
-	vmovdqu [rdi+0xC0], ymm7
+	vmovdqu [ rdi + 6 * SIZEOF_YWORD ], ymm7
 	COPY_THE_LAST_BYTES_UP_TO_32 7, ymm8
 
 align 16
@@ -136,13 +139,13 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x3F, ymm9
 ;found_a_null_byte_between_the_indices_0x40_and_0x7F:
 ; store the next 2 ywords to the destination string
-	vmovdqu [rdi+0x00], ymm1
-	vmovdqu [rdi+0x20], ymm2
+	vmovdqu [ rdi + 0 * SIZEOF_YWORD ], ymm1
+	vmovdqu [ rdi + 1 * SIZEOF_YWORD ], ymm2
 ; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x40_and_0x5F, ymm3
 ;found_a_null_byte_between_the_indices_0x60_and_0x7F:
 ; store the next yword to the destination string
-	vmovdqu [rdi+0x40], ymm3
+	vmovdqu [ rdi + 2 * SIZEOF_YWORD ], ymm3
 	COPY_THE_LAST_BYTES_UP_TO_32 3, ymm4
 
 align 16
@@ -151,7 +154,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x1F, ymm1
 ;found_a_null_byte_between_the_indices_0x20_and_0x3F:
 ; store the next yword to the destination string
-	vmovdqu [rdi+0x00], ymm1
+	vmovdqu [ rdi + 0 * SIZEOF_YWORD ], ymm1
 	COPY_THE_LAST_BYTES_UP_TO_32 1, ymm2
 
 align 16
@@ -168,7 +171,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0x9F, ymm5
 ;found_a_null_byte_between_the_indices_0xA0_and_0xBF:
 ; store the next yword to the destination string
-	vmovdqu [rdi+0x80], ymm5
+	vmovdqu [ rdi + 4 * SIZEOF_YWORD ], ymm5
 	COPY_THE_LAST_BYTES_UP_TO_32 5, ymm6
 
 align 16
@@ -180,51 +183,51 @@ align 16
 	COPY_THE_LAST_BYTES_UP_TO_32 6, ymm7
 
 align 16
-.copy_between_1_and_32_bytes:
+.copy_the_last_bytes:
 	inc edx
-	cmp edx, 16
-	ja .copy_between_17_and_32_bytes
-	cmp edx, 8
-	ja .copy_between_9_and_16_bytes
-	cmp edx, 4
-	ja .copy_between_5_and_8_bytes
-	cmp edx, 2
-	ja .copy_between_3_and_4_bytes
-;copy between 1 and 2 bytes:
-	mov cl,  [rsi]
-	mov sil, [rsi+rdx-SIZEOF_BYTE]
-	mov [rdi], cl
-	mov [rdi+rdx-SIZEOF_BYTE], sil
+	cmp edx, SIZEOF_OWORD
+	ja .copy_the_last_2_owords
+	cmp edx, SIZEOF_QWORD
+	ja .copy_the_last_2_qwords
+	cmp edx, SIZEOF_DWORD
+	ja .copy_the_last_2_dwords
+	cmp edx, SIZEOF_WORD
+	ja .copy_the_last_2_words
+;copy_the_last_2_bytes:
+	mov cl,  [ rsi ]
+	mov sil, [ rsi + rdx - SIZEOF_BYTE ]
+	mov [ rdi ], cl
+	mov [ rdi + rdx - SIZEOF_BYTE ], sil
 	CLEAN_RET
 
 align 16
-.copy_between_3_and_4_bytes:
-	mov cx, [rsi]
-	mov si, [rsi+rdx-SIZEOF_WORD]
-	mov [rdi], cx
-	mov [rdi+rdx-SIZEOF_WORD], si
+.copy_the_last_2_owords:
+	movdqu xmm3, [ rsi ]
+	movdqu xmm4, [ rsi + rdx - SIZEOF_OWORD ]
+	movdqu [ rdi ], xmm3
+	movdqu [ rdi + rdx - SIZEOF_OWORD ], xmm4
 	CLEAN_RET
 
 align 16
-.copy_between_5_and_8_bytes:
-	mov ecx, [rsi]
-	mov esi, [rsi+rdx-SIZEOF_DWORD]
-	mov [rdi], ecx
-	mov [rdi+rdx-SIZEOF_DWORD], esi
+.copy_the_last_2_qwords:
+	mov rcx, [ rsi ]
+	mov rsi, [ rsi + rdx - SIZEOF_QWORD ]
+	mov [ rdi ], rcx
+	mov [ rdi + rdx - SIZEOF_QWORD ], rsi
 	CLEAN_RET
 
 align 16
-.copy_between_9_and_16_bytes:
-	mov rcx, [rsi]
-	mov rsi, [rsi+rdx-SIZEOF_QWORD]
-	mov [rdi], rcx
-	mov [rdi+rdx-SIZEOF_QWORD], rsi
+.copy_the_last_2_dwords:
+	mov ecx, [ rsi ]
+	mov esi, [ rsi + rdx - SIZEOF_DWORD ]
+	mov [ rdi ], ecx
+	mov [ rdi + rdx - SIZEOF_DWORD ], esi
 	CLEAN_RET
 
 align 16
-.copy_between_17_and_32_bytes:
-	movdqu xmm3, [rsi]
-	movdqu xmm4, [rsi+rdx-SIZEOF_OWORD]
-	movdqu [rdi], xmm3
-	movdqu [rdi+rdx-SIZEOF_OWORD], xmm4
+.copy_the_last_2_words:
+	mov cx, [ rsi ]
+	mov si, [ rsi + rdx - SIZEOF_WORD ]
+	mov [ rdi ], cx
+	mov [ rdi + rdx - SIZEOF_WORD ], si
 	CLEAN_RET

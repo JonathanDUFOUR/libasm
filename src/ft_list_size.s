@@ -16,15 +16,18 @@ section .text
 align 16
 ft_list_size:
 	xor rax, rax
-.loop:
-; check if the end of the list has been reached
+align 16
+.check_the_next_node:
+; check if the end of the list is reached
 	test rdi, rdi
 	jz .return
 ; increment the counter
 	inc rax
 ; step to the next node
-	mov rdi, [rdi+SIZEOF_QWORD]
+	mov rdi, [ rdi + SIZEOF_QWORD ]
 ; repeat until the end of the list is reached
-	jmp .loop
+	jmp .check_the_next_node
+
+align 16
 .return:
 	ret

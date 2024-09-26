@@ -29,9 +29,11 @@ ft_read:
 
 align 16
 .error:
+; set the errno variable
 	neg rax
 	mov rdi, rax
 	call __errno_location wrt ..plt
-	mov [rax], rdi
+	mov [ rax ], rdi
+; set the return value to -1
 	or rax, -1
 	ret
