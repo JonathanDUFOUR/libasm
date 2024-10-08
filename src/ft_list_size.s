@@ -8,8 +8,8 @@ ALIGNMODE p6
 section .text
 ; Calculates how many nodes a given list contains.
 ;
-; Parameters:
-; rdi: the address of the first node of the list. (assumed to be a valid address or NULL)
+; Parameters
+; rdi: the address of the 1st node of the list. (assumed to be a valid address or NULL)
 ;
 ; Return:
 ; rax: the number of nodes in the list.

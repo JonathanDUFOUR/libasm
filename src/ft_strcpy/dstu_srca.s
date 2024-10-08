@@ -10,7 +10,7 @@ ALIGNMODE p6
 %define SIZEOF_OWORD 16
 %define SIZEOF_YWORD 32
 
-; Parameters:
+; Parameters
 ; %1: the label to jump to if the given YMM register contains a null byte.
 ; %2: the YMM register to check.
 %macro JUMP_IF_HAS_A_NULL_BYTE 2
@@ -21,14 +21,14 @@ ALIGNMODE p6
 
 ; Paramters:
 ; %1: the number of ywords to advance both the destination pointer and the source pointer by.
-; %2: the YMM register that contains the first null byte.
+; %2: the YMM register that contains the 1st null byte.
 %macro COPY_THE_LAST_BYTES_UP_TO_32 2
 %if %1 > 0
 ; update the pointers
 	add rdi, %1 * SIZEOF_YWORD
 	add rsi, %1 * SIZEOF_YWORD
 %endif
-; calculate the index of the first null byte in the given YMM register
+; calculate the index of the 1st null byte in the given YMM register
 	vpcmpeqb ymm0, ymm0, %2
 	vpmovmskb rdx, ymm0
 	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
@@ -46,7 +46,7 @@ section .text
 ; The destination string is assumed to be large enough
 ; to hold the source string, including its null terminator.
 ;
-; Parameters:
+; Parameters
 ; rdi: the address of the destination string to copy to. (assumed to be a valid address)
 ; rsi: the address of the source string to copy from. (assumed to be a valid address)
 ;
@@ -57,14 +57,14 @@ ft_strcpy_dstu_srca:
 ; preliminary initialization
 	mov rax, rdi
 	vpxor ymm0, ymm0, ymm0
-; load the first yword from the soure string
+; load the 1st yword from the soure string
 	vmovdqu ymm1, [ rsi ]
-; calculate the index of the first null byte in the first yword if any
+; calculate the index of the 1st null byte in the 1st yword if any
 	vpcmpeqb ymm2, ymm0, ymm1
 	vpmovmskb rdx, ymm2
 	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 	jnz .copy_the_last_bytes
-; store the first yword to the destination string
+; store the 1st yword to the destination string
 	vmovdqu [ rdi ], ymm1
 ; calculate how har the source string is to its next yword boundary
 	mov rcx, rsi

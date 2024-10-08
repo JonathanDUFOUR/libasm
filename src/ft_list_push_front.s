@@ -7,39 +7,49 @@ ALIGNMODE p6
 
 %define SIZEOF_QWORD 8
 
-%define SIZEOF_NODE 2 * SIZEOF_QWORD
+struc t_node
+	.data: resq 1
+	.next: resq 1
+endstruc
+
+%define SIZEOF_NODE t_node_size
 
 section .text
 ; Allocates a new node and prepends it to a given linked-list.
 ; In case of error, sets errno properly.
 ;
-; Parameters:
-; rdi: the address of a pointer to the first node of the list to push to. (assumed to be a valid address)
+; Parameters
+; rdi: the address of a pointer to the 1st node of the list to push to. (assumed to be a valid address)
 ; rsi: the address of the data to store in the new node to push.
 align 16
 ft_list_push_front:
-; preserve the volatile registers
-	push rdi
-	push rsi
+
+%define LIST [ rsp + 0 * SIZEOF_QWORD ]
+%define DATA [ rsp + 1 * SIZEOF_QWORD ]
+%define STACK_SIZE   2 * SIZEOF_QWORD
+
+; reserve space for the local variables
+	sub rsp, STACK_SIZE
+; initialize the local variables
+	mov LIST, rdi
+	mov DATA, rsi
 ; allocate the new node
 	mov rdi, SIZEOF_NODE
 	call malloc wrt ..plt
 ; check if malloc failed
 	test rax, rax
-	jz .malloc_failed
-; restore the volatile registers
-	pop rsi
-	pop rdi
-; initialize the `data` field
-	mov [ rax ], rsi
-; initialize the `next` field
-	mov rsi, [ rdi ]
-	mov [ rax + SIZEOF_QWORD ], rsi
+	jz .return
+; load the local variables
+	mov rcx, LIST
+	mov rdx, DATA
+; initialize the fields of the new node
+	mov [ rax + t_node.data ], rdx
+	mov r8, [ rcx ]
+	mov [ rax + t_node.next ], r8
 ; update the head of the list
-	mov [ rdi ], rax
-	ret
-
+	mov [ rcx ], rax
 align 16
-.malloc_failed:
-	add rsp, 2 * SIZEOF_QWORD ; restore the stack pointer
+.return:
+; restore the stack pointer
+	add rsp, STACK_SIZE
 	ret

@@ -27,7 +27,7 @@ section .text
 ; Copies N bytes from a memory area to another.
 ; The memory areas are assumed to not overlap.
 ;
-; Parameters:
+; Parameters
 ; rdi: the address of the destination memory area. (assumed to be a valid address)
 ; rsi: the address of the source memory area. (assumed to be a valid address)
 ; rdx: the number of bytes to copy.

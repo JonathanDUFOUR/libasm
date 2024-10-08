@@ -5,7 +5,7 @@ ALIGNMODE p6
 
 %define SIZEOF_YWORD 32
 
-; Parameters:
+; Parameters
 ; %1: the label to jump to if the given YMM register contains a null byte.
 ; %2: the yword to check (may be a YMM register or an address).
 %macro JUMP_IF_HAS_A_NULL_BYTE 2
@@ -19,10 +19,10 @@ ALIGNMODE p6
 	ret
 %endmacro
 
-; Parameters:
+; Parameters
 ; %1: the offset to apply to the pointer before calculating the final length.
 %macro RETURN_FINAL_LENGTH 1
-; calculate the index of the first null byte in the given YMM register
+; calculate the index of the 1st null byte in the given YMM register
 	vpmovmskb rcx, ymm12
 	bsf ecx, ecx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 ; update the pointer to its final position
@@ -47,12 +47,12 @@ ft_strlen_sa:
 	vpxor ymm0, ymm0, ymm0
 ; align the pointer to the previous yword boundary
 	and rax, -SIZEOF_YWORD
-; check if the first yword contains a null byte
+; check if the 1st yword contains a null byte
 	vpcmpeqb ymm12, ymm0, [ rax ]
 	vpmovmskb eax, ymm12
 ; ignore the unwanted leading bytes
 	shrx eax, eax, edi ; REMIND: this is for little-endian. Use shlx instead of shrx for big-endian.
-; calculate the index of the first null byte in the first yword if any
+; calculate the index of the 1st null byte in the 1st yword if any
 	bsf eax, eax ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 	jnz .small_length
 ; align the pointer to the next yword boundary:
@@ -99,34 +99,34 @@ align 16
 
 align 16
 .found_a_null_byte_between_the_indices_0x00_and_0xFF:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm9
-;found_a_null_byte_between_the_indices_0x80_and_0xFF
-; figure out which yword contains the first null byte
+;found_a_null_byte_between_the_indices_0x80_and_0xFF:
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm7
-;found_a_null_byte_between_the_indices_0xC0_and_0xFF
-; figure out which yword contains the first null byte
+;found_a_null_byte_between_the_indices_0xC0_and_0xFF:
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0xC0_and_0xDF, ymm4
-;found_a_null_byte_between_the_indices_0xE0_and_0xFF
+;found_a_null_byte_between_the_indices_0xE0_and_0xFF:
 	vpcmpeqb ymm12, ymm0, [ rax + 7 * SIZEOF_YWORD ]
 	RETURN_FINAL_LENGTH 0xE0
 
 align 16
 .found_a_null_byte_between_the_indices_0x00_and_0x7F:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x3F, ymm5
-;found_a_null_byte_between_the_indices_0x40_and_0x7F
-; figure out which yword contains the first null byte
+;found_a_null_byte_between_the_indices_0x40_and_0x7F:
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x40_and_0x5F, ymm2
-;found_a_null_byte_between_the_indices_0x60_and_0x7F
+;found_a_null_byte_between_the_indices_0x60_and_0x7F:
 	vpcmpeqb ymm12, ymm0, [ rax + 3 * SIZEOF_YWORD ]
 	RETURN_FINAL_LENGTH 0x60
 
 align 16
 .found_a_null_byte_between_the_indices_0x00_and_0x3F:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x1F, ymm1
-;found_a_null_byte_between_the_indices_0x20_and_0x3F
+;found_a_null_byte_between_the_indices_0x20_and_0x3F:
 	vpcmpeqb ymm12, ymm0, [ rax + 1 * SIZEOF_YWORD ]
 	RETURN_FINAL_LENGTH 0x20
 
@@ -140,9 +140,9 @@ align 16
 
 align 16
 .found_a_null_byte_between_the_indices_0x80_and_0xBF:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0x9F, ymm3
-;found_a_null_byte_between_the_indices_0xA0_and_0xBF
+;found_a_null_byte_between_the_indices_0xA0_and_0xBF:
 	vpcmpeqb ymm12, ymm0, [ rax + 5 * SIZEOF_YWORD ]
 	RETURN_FINAL_LENGTH 0xA0
 

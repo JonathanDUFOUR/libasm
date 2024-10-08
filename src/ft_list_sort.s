@@ -33,7 +33,7 @@ ft_list_sort:
 %define LIST    [ rsp + 4 * SIZEOF_QWORD ]
 %define STACK_SIZE      5 * SIZEOF_QWORD
 
-; reserve space for the local constants/variables
+; reserve space for the local variables
 	sub rsp, STACK_SIZE
 ; preserve the non-volatile registers
 	mov OLD_RBX, rbx
@@ -122,7 +122,7 @@ merge_sort:
 %define SUBLIST_B [ rsp + 2 * SIZEOF_QWORD ]
 %define STACK_SIZE        3 * SIZEOF_QWORD
 
-; reserve space for the local constants/variables
+; reserve space for the local variables
 	sub rsp, STACK_SIZE
 ; initialize the pointers
 	mov rax, NULL                ; the 1st node of the sublist A

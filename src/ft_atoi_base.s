@@ -9,9 +9,7 @@ ALIGNMODE p6
 %define SIZEOF_QWORD 8
 %define SIZEOF_YWORD 32
 
-%define SIZEOF_ARRAY_OF_DIGITS 256*SIZEOF_BYTE
-
-; Parameters:
+; Parameters
 ; %1: the label to jump to if the given YMM register contains no null byte
 ; %3: the yword to use as mask
 ; %2: the yword to check
@@ -29,7 +27,7 @@ section .text
 ; any duplicate characters, nor any of the following:
 ; `%x09-0D / %x20 / %x2B / %x2D`
 ;
-; Parameters:
+; Parameters
 ; rdi: the address of the string to parse. (assumed to be a valid address)
 ; rsi: the address of the string to use as base. (assumed to be a valid address)
 ;
@@ -39,10 +37,13 @@ section .text
 ; - 0 otherwise.
 align 16
 ft_atoi_base:
+
+%define SIZEOF_ARRAY_OF_DIGITS 256*SIZEOF_BYTE
+
 ; preserve the stack pointer and align it to its previous yword boundary
 	mov rdx, rsp
 	and rsp, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
-; reserve the space for the local variables
+; reserve space for the local constants/variables
 	sub rsp, SIZEOF_ARRAY_OF_DIGITS
 ; preliminary initialization
 	xor eax, eax
@@ -90,13 +91,13 @@ ft_atoi_base:
 ; initialize registers for the upcoming processing
 	xor rcx, rcx
 	xor r8, r8 ; the base length
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xFF, ymm13, ymm9
 ;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x7F:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x7F, ymm14, ymm5
 ;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x3F:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x20_and_0x3F, ymm15, ymm1
 ;found_a_null_byte_in_the_base_between_the_indices_0x00_and_0x1F:
 	vpmovmskb r9, ymm15
@@ -104,10 +105,10 @@ ft_atoi_base:
 
 align 16
 .found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xFF:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xFF, ymm14, ymm7
 ;found_a_null_byte_in_the_base_between_the_indices_0x80_and_0xBF:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xA0_and_0xBF, ymm15, ymm3
 ;found_a_null_byte_in_the_base_between_the_indices_0x80_and_0x9F:
 	mov r11b, 4
@@ -117,7 +118,7 @@ align 16
 
 align 16
 .found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xFF:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0xE0_and_0xFF, ymm15, ymm4
 ;found_a_null_byte_in_the_base_between_the_indices_0xC0_and_0xDF:
 	mov r11b, 6
@@ -141,7 +142,7 @@ align 16
 
 align 16
 .found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x7F:
-; figure out which yword contains the first null byte
+; figure out which yword contains the 1st null byte
 	JUMP_IF_HAS_NO_NULL_BYTE .found_a_null_byte_in_the_base_between_the_indices_0x60_and_0x7F, ymm15, ymm2
 ;found_a_null_byte_in_the_base_between_the_indices_0x40_and_0x5F:
 	mov r11b, 2
@@ -292,7 +293,7 @@ align 16
 	jb .return
 align 16
 .parse_the_string:
-; load the first yword from the string
+; load the 1st yword from the string
 	vmovdqu ymm12, [ rdi ]
 ; compare the yword with the whitespaces
 	vpcmpeqb ymm1,  ymm12, [ HT ]
@@ -324,7 +325,7 @@ align 16
 	vpmovmskb r9, ymm8
 ; check if the yword contains a non-whitespace character
 	cmp r9d, -1
-	jne .advance_to_the_first_non_whitespace_character
+	jne .advance_to_the_1st_non_whitespace_character
 ; align the string pointer to the next yword boundary
 	add rdi,  SIZEOF_YWORD
 	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
@@ -362,15 +363,15 @@ align 16
 	vpmovmskb r9, ymm8
 ; check if the yword contains a non-whitespace character
 	cmp r9d, -1
-	jne .advance_to_the_first_non_whitespace_character
+	jne .advance_to_the_1st_non_whitespace_character
 ; update the string pointer
 	add rdi, SIZEOF_YWORD
 ; repeat until a non-whitespace character is found
 	jmp .look_for_non_whitespace_characters_in_the_next_yword
 
 align 16
-.advance_to_the_first_non_whitespace_character:
-; calculate the index of the first non-whitespace character in the next yword of the string
+.advance_to_the_1st_non_whitespace_character:
+; calculate the index of the 1st non-whitespace character in the next yword of the string
 	not r9d
 	bsf ecx, r9d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 ; update the string pointer
@@ -384,7 +385,7 @@ align 16
 	and r9, SIZEOF_YWORD - 1 ; modulo SIZEOF_YWORD
 ; align the string pointer to its previous yword boundary
 	and rdi, -SIZEOF_YWORD
-; load the first aligned yword from the string that contains a sign
+; load the 1st aligned yword from the string that contains a sign
 	vmovdqa ymm13, [ rdi ]
 ; compare the yword with the signs
 	vpcmpeqb ymm5, ymm13, [ plus_sign ]
@@ -409,7 +410,7 @@ align 16
 	jz .process_the_signs
 ; update the string pointer
 	add rdi, r9
-	jmp .advance_to_the_first_non_sign_character
+	jmp .advance_to_the_1st_non_sign_character
 
 align 16
 .process_the_signs:
@@ -438,8 +439,8 @@ align 16
 	test r10d, r10d
 	jz .process_the_signs
 align 16
-.advance_to_the_first_non_sign_character:
-; calculate the index of the first non-sign character in the next yword of the string
+.advance_to_the_1st_non_sign_character:
+; calculate the index of the 1st non-sign character in the next yword of the string
 	bsf ecx, r10d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 ; ignore the unwanted trailing bytes
 	mov r9b, SIZEOF_YWORD-1
@@ -459,7 +460,7 @@ align 16
 ; check if the yword contains a non-zero-digit character
 	vpmovmskb r9, ymm1
 	cmp r9d, -1
-	jne .advance_to_the_first_non_zero_digit_character
+	jne .advance_to_the_1st_non_zero_digit_character
 ; align the string pointer to the next yword boundary
 	add rdi,  SIZEOF_YWORD
 	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
@@ -472,15 +473,15 @@ align 16
 ; check if the yword contains a non-zero-digit character
 	vpmovmskb r9, ymm1
 	cmp r9d, -1
-	jne .advance_to_the_first_non_zero_digit_character
+	jne .advance_to_the_1st_non_zero_digit_character
 ; update the string pointer
 	add rdi, SIZEOF_YWORD
 ; repeat until a non-zero-digit character is found
 	jmp .look_for_non_zero_digit_characters_in_the_next_yword
 
 align 16
-.advance_to_the_first_non_zero_digit_character:
-; calculate the index of the first non-zero-digit character in the next yword of the string
+.advance_to_the_1st_non_zero_digit_character:
+; calculate the index of the 1st non-zero-digit character in the next yword of the string
 	not r9d
 	bsf ecx, r9d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 ; update the string pointer
@@ -511,7 +512,7 @@ align 16
 .return:
 ; clean the upper part of the YMM registers
 	vzeroupper
-; restore the non-volatile registers
+; restore the stack pointer
 	mov rsp, rdx
 	ret
 
