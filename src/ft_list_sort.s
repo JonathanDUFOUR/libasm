@@ -86,7 +86,7 @@ align 16
 ; check if the end of the list is reached
 	test r12, r12
 	jz .return_true
-; check if the current node is greater than the next one
+; check if the current node's data is greater than the next node's data
 	mov rdi, [ rcx + t_node.data ]
 	mov rsi, [ r12 + t_node.data ]
 	call rbx
@@ -180,7 +180,7 @@ align 16
 	mov r11, LIST
 	mov r12, SUBLIST_A
 	mov r13, SUBLIST_B
-; compare the 1st node of both sublists
+; compare the 1st node's data of both sublists
 	mov rdi, [ r12 + t_node.data ]
 	mov rsi, [ r13 + t_node.data ]
 	call rbx
@@ -200,7 +200,7 @@ align 16
 ; check if the sublist A is empty
 	test r12, r12
 	jz .append_the_sublist_B_to_the_merged_list
-; compare the 1st node of both sublists
+; compare the 1st node's data of both sublists
 	mov rdi, [ r12 + t_node.data ]
 	mov rsi, [ r13 + t_node.data ]
 	call rbx
