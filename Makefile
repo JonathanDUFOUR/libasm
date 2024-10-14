@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/08/30 17:31:31 by jodufour         ###   ########.fr        #
+#    Updated: 2024/10/14 19:12:52 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -63,7 +63,7 @@ SRC := \
 			strlen \
 			write \
 		} \
-	}
+	} \
 
 SRC_BONUS := \
 	${addsuffix .s, \
@@ -76,7 +76,7 @@ SRC_BONUS := \
 				sort \
 			} \
 		} \
-	}
+	} \
 
 ######################################
 #            OBJECT FILES            #
@@ -93,7 +93,7 @@ DEP_BONUS := ${OBJ_BONUS:.o=.d}
 AFLAGS := \
 	-f elf64 \
 	-werror \
-	-I ${SRC_DIR}
+	-I ${SRC_DIR} \
 
 ifeq (${DEBUG}, 1)
 	AFLAGS += -g
