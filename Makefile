@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/10/14 19:12:52 by jodufour         ###   ########.fr        #
+#    Updated: 2024/11/20 17:53:21 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,7 @@ MKDIR := ${shell which mkdir} -p
 #               LIBRARY               #
 #######################################
       NAME := libasm.a
-NAME_BONUS := libasm_bonus.a
+BONUS_NAME := libasm_bonus.a
 
 #######################################
 #             DIRECTORIES             #
@@ -65,7 +65,7 @@ SRC := \
 		} \
 	} \
 
-SRC_BONUS := \
+BONUS_SRC := \
 	${addsuffix .s, \
 		${addprefix ft_, \
 			atoi_base \
@@ -84,8 +84,8 @@ SRC_BONUS := \
 OBJ := ${addprefix ${OBJ_DIR}/, ${SRC:.s=.o}}
 DEP := ${OBJ:.o=.d}
 
-OBJ_BONUS := ${addprefix ${OBJ_DIR}/, ${SRC_BONUS:.s=.o}}
-DEP_BONUS := ${OBJ_BONUS:.o=.d}
+BONUS_OBJ := ${addprefix ${OBJ_DIR}/, ${BONUS_SRC:.s=.o}}
+BONUS_DEP := ${BONUS_OBJ:.o=.d}
 
 #######################################
 #                FLAGS                #
@@ -103,19 +103,19 @@ endif
 #                RULES                #
 #######################################
 .PHONY: all
-all: ${NAME} ${NAME_BONUS}
+all: ${NAME} ${BONUS_NAME}
 
 .PHONY: bonus
-bonus: ${NAME_BONUS}
+bonus: ${BONUS_NAME}
 
 ${NAME}: ${OBJ}
 	${AR} $@ $^
 
-${NAME_BONUS}: ${OBJ_BONUS}
+${BONUS_NAME}: ${BONUS_OBJ}
 	${AR} $@ $^
 	${AR} ${NAME} $^
 
--include ${DEP} ${DEP_BONUS}
+-include ${DEP} ${BONUS_DEP}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	@${MKDIR} ${@D}
@@ -127,7 +127,7 @@ clean:
 
 .PHONY: fclean
 fclean: clean
-	${RM} ${NAME} ${NAME_BONUS}
+	${RM} ${NAME} ${BONUS_NAME}
 
 .PHONY: re
 re: clean all
