@@ -12,8 +12,6 @@ ALIGNMODE p6
 %define TRUE  1
 %define FALSE 0
 
-%define SIZEOF_BOOLEAN 1
-
 section .text
 ; Sorts a singly linked list in ascending order, using a function to compare data in the list.
 ;

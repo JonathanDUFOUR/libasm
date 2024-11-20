@@ -5,8 +5,6 @@ ALIGNMODE p6
 
 %include "node.s"
 
-%define SIZEOF_QWORD 8
-
 section .text
 ; Calculates how many nodes a given list contains.
 ;
@@ -26,7 +24,7 @@ align 16
 ; increment the counter
 	inc rax
 ; step to the next node
-	mov rdi, [ rdi + SIZEOF_QWORD ]
+	mov rdi, [ rdi + t_node.next ]
 ; repeat until the end of the list is reached
 	jmp .check_the_next_node
 

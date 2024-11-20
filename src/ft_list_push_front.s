@@ -8,7 +8,6 @@ ALIGNMODE p6
 %include "node.s"
 
 %define SIZEOF_QWORD 8
-
 %define SIZEOF_NODE t_node_size
 
 section .text
