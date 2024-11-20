@@ -3,6 +3,8 @@ global ft_list_sort: function
 %use smartalign
 ALIGNMODE p6
 
+%include "node.s"
+
 %define SIZEOF_QWORD 8
 
 %define NULL 0
@@ -11,11 +13,6 @@ ALIGNMODE p6
 %define FALSE 0
 
 %define SIZEOF_BOOLEAN 1
-
-struc t_node
-	.data: resq 1
-	.next: resq 1
-endstruc
 
 section .text
 ; Sorts a singly linked list in ascending order, using a function to compare data in the list.

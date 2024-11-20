@@ -3,6 +3,8 @@ global ft_list_size: function
 %use smartalign
 ALIGNMODE p6
 
+%include "node.s"
+
 %define SIZEOF_QWORD 8
 
 section .text

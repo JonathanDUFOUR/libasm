@@ -5,12 +5,9 @@ extern malloc: function
 %use smartalign
 ALIGNMODE p6
 
-%define SIZEOF_QWORD 8
+%include "node.s"
 
-struc t_node
-	.data: resq 1
-	.next: resq 1
-endstruc
+%define SIZEOF_QWORD 8
 
 %define SIZEOF_NODE t_node_size
 
