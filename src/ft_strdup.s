@@ -7,7 +7,7 @@ extern malloc: function
 %use smartalign
 ALIGNMODE p6
 
-%define SIZEOF_QWORD 8
+%define QWORD_SIZE 8
 
 section .text
 ; Duplicates a string, using dynamic memory allocation.
@@ -22,9 +22,9 @@ section .text
 align 16
 ft_strdup:
 
-%define S   [ rsp + 0 * SIZEOF_QWORD ]
-%define LEN [ rsp + 1 * SIZEOF_QWORD ]
-%define STACK_SIZE  2 * SIZEOF_QWORD
+%define S   [ rsp + 0 * QWORD_SIZE ]
+%define LEN [ rsp + 1 * QWORD_SIZE ]
+%define STACK_SIZE  2 * QWORD_SIZE
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE

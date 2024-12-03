@@ -7,8 +7,8 @@ ALIGNMODE p6
 
 %include "node.s"
 
-%define SIZEOF_QWORD 8
-%define SIZEOF_NODE t_node_size
+%define QWORD_SIZE 8
+%define  NODE_SIZE t_node_size
 
 section .text
 ; Allocates a new node and prepends it to a given linked-list.
@@ -20,9 +20,9 @@ section .text
 align 16
 ft_list_push_front:
 
-%define LIST [ rsp + 0 * SIZEOF_QWORD ]
-%define DATA [ rsp + 1 * SIZEOF_QWORD ]
-%define STACK_SIZE   2 * SIZEOF_QWORD
+%define LIST [ rsp + 0 * QWORD_SIZE ]
+%define DATA [ rsp + 1 * QWORD_SIZE ]
+%define STACK_SIZE   2 * QWORD_SIZE
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE
@@ -30,7 +30,7 @@ ft_list_push_front:
 	mov LIST, rdi
 	mov DATA, rsi
 ; allocate the new node
-	mov rdi, SIZEOF_NODE
+	mov rdi, NODE_SIZE
 	call malloc wrt ..plt
 ; check if malloc failed
 	test rax, rax

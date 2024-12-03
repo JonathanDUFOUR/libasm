@@ -7,7 +7,7 @@ ALIGNMODE p6
 
 %include "node.s"
 
-%define SIZEOF_QWORD 8
+%define QWORD_SIZE 8
 
 %define NULL 0
 
@@ -24,13 +24,13 @@ section .text
 align 16
 ft_list_remove_if:
 
-%define OLD_RBX [ rsp + 0 * SIZEOF_QWORD ]
-%define OLD_RBP [ rsp + 1 * SIZEOF_QWORD ]
-%define OLD_R12 [ rsp + 2 * SIZEOF_QWORD ]
-%define OLD_R13 [ rsp + 3 * SIZEOF_QWORD ]
-%define OLD_R14 [ rsp + 4 * SIZEOF_QWORD ]
-%define OLD_R15 [ rsp + 5 * SIZEOF_QWORD ]
-%define STACK_SIZE	    6 * SIZEOF_QWORD
+%define OLD_RBX [ rsp + 0 * QWORD_SIZE ]
+%define OLD_RBP [ rsp + 1 * QWORD_SIZE ]
+%define OLD_R12 [ rsp + 2 * QWORD_SIZE ]
+%define OLD_R13 [ rsp + 3 * QWORD_SIZE ]
+%define OLD_R14 [ rsp + 4 * QWORD_SIZE ]
+%define OLD_R15 [ rsp + 5 * QWORD_SIZE ]
+%define STACK_SIZE	    6 * QWORD_SIZE
 
 ; check if the list is empty
 	cmp qword [ rdi ], NULL

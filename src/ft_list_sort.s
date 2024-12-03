@@ -5,7 +5,7 @@ ALIGNMODE p6
 
 %include "node.s"
 
-%define SIZEOF_QWORD 8
+%define QWORD_SIZE 8
 
 %define NULL 0
 
@@ -21,12 +21,12 @@ section .text
 align 16
 ft_list_sort:
 
-%define OLD_RBX [ rsp + 0 * SIZEOF_QWORD ]
-%define OLD_R12 [ rsp + 1 * SIZEOF_QWORD ]
-%define OLD_R13 [ rsp + 2 * SIZEOF_QWORD ]
-%define OLD_R14 [ rsp + 3 * SIZEOF_QWORD ]
-%define LIST    [ rsp + 4 * SIZEOF_QWORD ]
-%define STACK_SIZE      5 * SIZEOF_QWORD
+%define OLD_RBX [ rsp + 0 * QWORD_SIZE ]
+%define OLD_R12 [ rsp + 1 * QWORD_SIZE ]
+%define OLD_R13 [ rsp + 2 * QWORD_SIZE ]
+%define OLD_R14 [ rsp + 3 * QWORD_SIZE ]
+%define LIST    [ rsp + 4 * QWORD_SIZE ]
+%define STACK_SIZE      5 * QWORD_SIZE
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE
@@ -112,10 +112,10 @@ align 16
 align 16
 merge_sort:
 
-%define LIST      [ rsp + 0 * SIZEOF_QWORD ]
-%define SUBLIST_A [ rsp + 1 * SIZEOF_QWORD ]
-%define SUBLIST_B [ rsp + 2 * SIZEOF_QWORD ]
-%define STACK_SIZE        3 * SIZEOF_QWORD
+%define LIST      [ rsp + 0 * QWORD_SIZE ]
+%define SUBLIST_A [ rsp + 1 * QWORD_SIZE ]
+%define SUBLIST_B [ rsp + 2 * QWORD_SIZE ]
+%define STACK_SIZE        3 * QWORD_SIZE
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE

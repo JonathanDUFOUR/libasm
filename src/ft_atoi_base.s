@@ -5,9 +5,9 @@ default rel
 %use smartalign
 ALIGNMODE p6
 
-%define SIZEOF_BYTE  1
-%define SIZEOF_QWORD 8
-%define SIZEOF_YWORD 32
+%define  BYTE_SIZE  1
+%define QWORD_SIZE  8
+%define YWORD_SIZE 32
 
 ; Parameters
 ; %1: the label to jump to if the given YMM register contains no null byte
@@ -38,13 +38,13 @@ section .text
 align 16
 ft_atoi_base:
 
-%define SIZEOF_ARRAY_OF_DIGITS 256*SIZEOF_BYTE
+%define DIGIT_ARRAY_SIZE 256*BYTE_SIZE
 
 ; preserve the stack pointer and align it to its previous yword boundary
 	mov rdx, rsp
-	and rsp, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+	and rsp, -YWORD_SIZE ; modulo YWORD_SIZE
 ; reserve space for the local constants/variables
-	sub rsp, SIZEOF_ARRAY_OF_DIGITS
+	sub rsp, DIGIT_ARRAY_SIZE
 ; preliminary initialization
 	xor eax, eax
 	vpxor ymm0, ymm0, ymm0
@@ -52,20 +52,20 @@ ft_atoi_base:
 %assign offset 0
 %rep 8
 	vmovdqa [ rsp + offset ], ymm11
-	%assign offset offset + SIZEOF_YWORD
+	%assign offset offset + YWORD_SIZE
 %endrep
 ; load 4 of the maximum 8 ywords of the base
 ; (a valid base can contain at most 247 characters, which always fit 8 ywords)
-	vmovdqu ymm1, [ rsi + 0 * SIZEOF_YWORD ]
-	vmovdqu ymm2, [ rsi + 2 * SIZEOF_YWORD ]
-	vmovdqu ymm3, [ rsi + 4 * SIZEOF_YWORD ]
-	vmovdqu ymm4, [ rsi + 6 * SIZEOF_YWORD ]
+	vmovdqu ymm1, [ rsi + 0 * YWORD_SIZE ]
+	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
+	vmovdqu ymm3, [ rsi + 4 * YWORD_SIZE ]
+	vmovdqu ymm4, [ rsi + 6 * YWORD_SIZE ]
 ; merge the ywords into one that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5,  ymm1, [ rsi + 1 * SIZEOF_YWORD ]
-	vpminub ymm6,  ymm2, [ rsi + 3 * SIZEOF_YWORD ]
-	vpminub ymm7,  ymm3, [ rsi + 5 * SIZEOF_YWORD ]
-	vpminub ymm8,  ymm4, [ rsi + 7 * SIZEOF_YWORD ]
+	vpminub ymm5,  ymm1, [ rsi + 1 * YWORD_SIZE ]
+	vpminub ymm6,  ymm2, [ rsi + 3 * YWORD_SIZE ]
+	vpminub ymm7,  ymm3, [ rsi + 5 * YWORD_SIZE ]
+	vpminub ymm8,  ymm4, [ rsi + 7 * YWORD_SIZE ]
 	vpminub ymm9,  ymm5, ymm6
 	vpminub ymm10, ymm7, ymm8
 	vpminub ymm11, ymm9, ymm10
@@ -206,7 +206,7 @@ align 16
 	vptest ymm15, ymm15
 	jnz .return
 ; iterate over each byte of the current ywordd
-	mov ecx, SIZEOF_YWORD
+	mov ecx, YWORD_SIZE
 align 16
 .check_and_save_the_next_digit_of_the_current_yword:
 ; load the next digit from the base
@@ -269,7 +269,7 @@ align 16
 ; extract the bit mask of the comparison
 	vpmovmskb r11, ymm15
 ; ignore the unwanted trailing bytes
-	mov r10b, SIZEOF_YWORD
+	mov r10b, YWORD_SIZE
 	sub r10b, cl
 	shlx r11d, r11d, r10d ; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
 ; check that the partial yword contains no forbidden characters
@@ -327,8 +327,8 @@ align 16
 	cmp r9d, -1
 	jne .advance_to_the_1st_non_whitespace_character
 ; align the string pointer to the next yword boundary
-	add rdi,  SIZEOF_YWORD
-	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+	add rdi,  YWORD_SIZE
+	and rdi, -YWORD_SIZE ; modulo YWORD_SIZE
 align 16
 .look_for_non_whitespace_characters_in_the_next_yword:
 ; load the next yword from the string
@@ -365,7 +365,7 @@ align 16
 	cmp r9d, -1
 	jne .advance_to_the_1st_non_whitespace_character
 ; update the string pointer
-	add rdi, SIZEOF_YWORD
+	add rdi, YWORD_SIZE
 ; repeat until a non-whitespace character is found
 	jmp .look_for_non_whitespace_characters_in_the_next_yword
 
@@ -382,9 +382,9 @@ align 16
 	xor rsi, rsi
 ; calculate how far the string pointer is to its previous yword boundary
 	mov r9, rdi
-	and r9, SIZEOF_YWORD - 1 ; modulo SIZEOF_YWORD
+	and r9, YWORD_SIZE - 1 ; modulo YWORD_SIZE
 ; align the string pointer to its previous yword boundary
-	and rdi, -SIZEOF_YWORD
+	and rdi, -YWORD_SIZE
 ; load the 1st aligned yword from the string that contains a sign
 	vmovdqa ymm13, [ rdi ]
 ; compare the yword with the signs
@@ -417,7 +417,7 @@ align 16
 	popcnt r11d, r11d
 	add rsi, r11
 ; update the string pointer
-	add rdi, SIZEOF_YWORD
+	add rdi, YWORD_SIZE
 ; load the next yword from the string
 	vmovdqa ymm13, [ rdi ]
 ; compare the yword with the signs
@@ -443,7 +443,7 @@ align 16
 ; calculate the index of the 1st non-sign character in the next yword of the string
 	bsf ecx, r10d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 ; ignore the unwanted trailing bytes
-	mov r9b, SIZEOF_YWORD-1
+	mov r9b, YWORD_SIZE-1
 	sub r9b, cl
 	shlx r11d, r11d, r9d ; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
 ; process the minus signs
@@ -462,8 +462,8 @@ align 16
 	cmp r9d, -1
 	jne .advance_to_the_1st_non_zero_digit_character
 ; align the string pointer to the next yword boundary
-	add rdi,  SIZEOF_YWORD
-	and rdi, -SIZEOF_YWORD ; modulo SIZEOF_YWORD
+	add rdi,  YWORD_SIZE
+	and rdi, -YWORD_SIZE ; modulo YWORD_SIZE
 align 16
 .look_for_non_zero_digit_characters_in_the_next_yword:
 ; load the next yword from the string
@@ -475,7 +475,7 @@ align 16
 	cmp r9d, -1
 	jne .advance_to_the_1st_non_zero_digit_character
 ; update the string pointer
-	add rdi, SIZEOF_YWORD
+	add rdi, YWORD_SIZE
 ; repeat until a non-zero-digit character is found
 	jmp .look_for_non_zero_digit_characters_in_the_next_yword
 
@@ -517,11 +517,11 @@ align 16
 	ret
 
 section .rodata
-        HT: times SIZEOF_YWORD db 0x09
-        VT: times SIZEOF_YWORD db 0x0B
-        CR: times SIZEOF_YWORD db 0x0D
-        LF: times SIZEOF_YWORD db 0x0A
-        FF: times SIZEOF_YWORD db 0x0C
-     space: times SIZEOF_YWORD db 0x20
- plus_sign: times SIZEOF_YWORD db 0x2B
-minus_sign: times SIZEOF_YWORD db 0x2D
+        HT: times YWORD_SIZE db 0x09
+        VT: times YWORD_SIZE db 0x0B
+        CR: times YWORD_SIZE db 0x0D
+        LF: times YWORD_SIZE db 0x0A
+        FF: times YWORD_SIZE db 0x0C
+     space: times YWORD_SIZE db 0x20
+ plus_sign: times YWORD_SIZE db 0x2B
+minus_sign: times YWORD_SIZE db 0x2D
