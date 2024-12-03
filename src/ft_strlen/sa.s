@@ -4,6 +4,7 @@ global ft_strlen_sa: function
 ALIGNMODE p6
 
 %define YWORD_SIZE 32
+%define  LOAD_SIZE 8 * YWORD_SIZE
 
 ; Parameters
 ; %1: the label to jump to if the given YMM register contains a null byte.
@@ -14,7 +15,7 @@ ALIGNMODE p6
 	jnz %1
 %endmacro
 
-%macro CLEAN_RET 0
+%macro VZEROUPPER_RET 0
 	vzeroupper
 	ret
 %endmacro
@@ -29,7 +30,7 @@ ALIGNMODE p6
 	lea rax, [ rax + %1 + rcx ]
 ; calculate the length
 	sub rax, rdi
-	CLEAN_RET
+	VZEROUPPER_RET
 %endmacro
 
 section .text
@@ -156,4 +157,4 @@ align 16
 
 align 16
 .small_length:
-	CLEAN_RET
+	VZEROUPPER_RET

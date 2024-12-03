@@ -35,7 +35,7 @@ ALIGNMODE p6
 	jmp .copy_the_last_bytes
 %endmacro
 
-%macro CLEAN_RET 0
+%macro VZEROUPPER_RET 0
 	vzeroupper
 	ret
 %endmacro
@@ -214,7 +214,7 @@ align 16
 	mov sil, [ rsi + rdx - BYTE_SIZE ]
 	mov [ rdi ], cl
 	mov [ rdi + rdx - BYTE_SIZE ], sil
-	CLEAN_RET
+	VZEROUPPER_RET
 
 align 16
 .copy_the_last_2_owords:
@@ -222,7 +222,7 @@ align 16
 	movdqu xmm4, [ rsi + rdx - OWORD_SIZE ]
 	movdqu [ rdi ], xmm3
 	movdqu [ rdi + rdx - OWORD_SIZE ], xmm4
-	CLEAN_RET
+	VZEROUPPER_RET
 
 align 16
 .copy_the_last_2_qwords:
@@ -230,7 +230,7 @@ align 16
 	mov rsi, [ rsi + rdx - QWORD_SIZE ]
 	mov [ rdi ], rcx
 	mov [ rdi + rdx - QWORD_SIZE ], rsi
-	CLEAN_RET
+	VZEROUPPER_RET
 
 align 16
 .copy_the_last_2_dwords:
@@ -238,7 +238,7 @@ align 16
 	mov esi, [ rsi + rdx - DWORD_SIZE ]
 	mov [ rdi ], ecx
 	mov [ rdi + rdx - DWORD_SIZE ], esi
-	CLEAN_RET
+	VZEROUPPER_RET
 
 align 16
 .copy_the_last_2_words:
@@ -246,4 +246,4 @@ align 16
 	mov si, [ rsi + rdx - WORD_SIZE ]
 	mov [ rdi ], cx
 	mov [ rdi + rdx - WORD_SIZE ], si
-	CLEAN_RET
+	VZEROUPPER_RET

@@ -18,7 +18,7 @@ ALIGNMODE p6
 	jnz %1
 %endmacro
 
-%macro CLEAN_RET 0
+%macro VZEROUPPER_RET 0
 	vzeroupper
 	ret
 %endmacro
@@ -31,7 +31,7 @@ ALIGNMODE p6
 	movzx eax, byte [ rdi + %1 + rcx ]
 	movzx ecx, byte [ rsi + %1 + rcx ]
 	sub eax, ecx
-	CLEAN_RET
+	VZEROUPPER_RET
 %endmacro
 
 section .text
@@ -539,4 +539,4 @@ align 16
 align 16
 .both_strings_completely_match:
 	xor eax, eax
-	CLEAN_RET
+	VZEROUPPER_RET

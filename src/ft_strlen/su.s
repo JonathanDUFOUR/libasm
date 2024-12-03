@@ -14,7 +14,7 @@ ALIGNMODE p6
 	jnz %1
 %endmacro
 
-%macro CLEAN_RET 0
+%macro VZEROUPPER_RET 0
 	vzeroupper
 	ret
 %endmacro
@@ -29,7 +29,7 @@ ALIGNMODE p6
 	lea rax, [ rax + %1 + rcx ]
 ; calculate the length
 	sub rax, rdi
-	CLEAN_RET
+	VZEROUPPER_RET
 %endmacro
 
 section .text
