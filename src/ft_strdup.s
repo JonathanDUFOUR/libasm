@@ -26,14 +26,13 @@ ft_strdup:
 %define LEN [ rsp + 1 * QWORD_SIZE ]
 %define STACK_SIZE  2 * QWORD_SIZE
 
+; calculate how many bytes shall be allocated
+	call ft_strlen
+	inc rax ; add 1 for the null-terminator
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE
 ; initialize the local variables
 	mov S, rdi
-; calculate how many bytes shall be allocated
-	call ft_strlen
-	inc rax ; add 1 for the null-terminator
-; initialize the local variables
 	mov LEN, rax
 ; allocate the new string
 	mov rdi, rax
