@@ -82,7 +82,7 @@ align 16
 align 16
 .is_pointer_aligned_to_8_ywords_boundary:
 	test rax, 4 * YWORD_SIZE
-	jz .check_the_next_8_ywords
+	jz .check_next_8_ywords
 ; load 2 of the next 4 ywords from the string
 	vmovdqa ymm1, [ rax + 0 * YWORD_SIZE ]
 	vmovdqa ymm2, [ rax + 2 * YWORD_SIZE ]
@@ -102,7 +102,7 @@ align 16
 ; update the pointer to the next 8-ywords boundary
 	add rax, 4 * YWORD_SIZE
 align 16
-.check_the_next_8_ywords:
+.check_next_8_ywords:
 ; load 4 of the next 8 ywords from the string
 	vmovdqa ymm1, [ rax + 0 * YWORD_SIZE ]
 	vmovdqa ymm2, [ rax + 2 * YWORD_SIZE ]
@@ -136,7 +136,7 @@ align 16
 ; update the pointer
 	add rax, 8 * YWORD_SIZE
 ; repeat until the next 8 ywords contain a null byte
-	jmp .check_the_next_8_ywords
+	jmp .check_next_8_ywords
 
 ;---------------------------------------------+
 ; figure out which yword contains a null byte |

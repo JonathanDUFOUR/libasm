@@ -17,7 +17,7 @@ align 16
 ft_list_size:
 	xor rax, rax
 align 16
-.check_the_next_node:
+.check_next_node:
 ; check if the end of the list is reached
 	test rdi, rdi
 	jz .return
@@ -26,7 +26,7 @@ align 16
 ; step to the next node
 	mov rdi, [ rdi + t_node.next ]
 ; repeat until the end of the list is reached
-	jmp .check_the_next_node
+	jmp .check_next_node
 
 align 16
 .return:

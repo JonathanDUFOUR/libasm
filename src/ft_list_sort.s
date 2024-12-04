@@ -40,7 +40,7 @@ ft_list_sort:
 	mov rcx, [ rdi ]
 	call is_sorted
 	test al, al
-	jnz .restore_the_non_volatile_registers
+	jnz .restore_non_volatile_registers
 ; preserve the non-volatile registers
 	mov OLD_R13, r13
 	mov OLD_R14, r14
@@ -51,7 +51,7 @@ ft_list_sort:
 	mov r14, OLD_R14
 	mov r13, OLD_R13
 align 16
-.restore_the_non_volatile_registers:
+.restore_non_volatile_registers:
 	mov r12, OLD_R12
 	mov rbx, OLD_RBX
 ; restore the stack pointer
@@ -76,7 +76,7 @@ is_sorted:
 	test rcx, rcx
 	jz .return_true
 align 16
-.load_the_next_node:
+.load_next_node:
 	mov r12, [ rcx + t_node.next ]
 ; check if the end of the list is reached
 	test r12, r12
@@ -90,7 +90,7 @@ align 16
 ; set the next node as the current one
 	mov rcx, r12
 ; repeat until either the end of the list is reached or an inversion is found
-	jmp .load_the_next_node
+	jmp .load_next_node
 
 align 16
 .return_true:
@@ -125,7 +125,7 @@ merge_sort:
 	mov r8, [ rdi ]              ; the 1st node of the list
 	mov r9, [ r8 + t_node.next ] ; the 2nd node of the list
 align 16
-.load_the_address_of_the_3rd_node_of_the_list:
+.load_address_of_3rd_node_of_list:
 	mov r10, [ r9 + t_node.next ]
 ; dispatch the first 2 nodes of the list
 	mov [ r8 + t_node.next ], rax ; prepend to the sublist A
@@ -135,43 +135,43 @@ align 16
 	mov rcx, r9 ; the new 1st node of the sublist B
 ; check if the list is empty
 	test r10, r10
-	jz .initialize_the_local_variables
+	jz .initialize_local_variables
 ; check if the list contains at least 2 elements
 	cmp qword [ r10 + t_node.next ], NULL
-	je .dispatch_the_last_node_of_the_list
+	je .dispatch_last_node_of_list
 ; update the pointers
 	mov r8, r10                   ; the new 1st node of the list
 	mov r9, [ r10 + t_node.next ] ; the new 2nd node of the list
 ; repeat until the list contains less than 2 elements
-	jmp .load_the_address_of_the_3rd_node_of_the_list
+	jmp .load_address_of_3rd_node_of_list
 
 align 16
-.dispatch_the_last_node_of_the_list:
+.dispatch_last_node_of_list:
 	mov [ r10 + t_node.next ], rax ; prepend to the sublist A
 ; update the pointers
 	mov rax, r10 ; the new 1st node of the sublist A
 align 16
-.initialize_the_local_variables:
+.initialize_local_variables:
 	mov LIST, rdi
 	mov SUBLIST_A, rax
 	mov SUBLIST_B, rcx
 ; check if the sublist A contains at least 2 elements
 	cmp qword [ rax + t_node.next ], NULL
-	je .check_if_the_sublist_B_contains_at_least_2_elements
+	je .check_if_sublist_B_contains_at_least_2_elements
 ; recursively call the `merge_sort` function on the sublist A
 	lea rdi, SUBLIST_A
 	call merge_sort
 ; load the address of the 1st node of the sublist B
 	mov rcx, SUBLIST_B
 align 16
-.check_if_the_sublist_B_contains_at_least_2_elements:
+.check_if_sublist_B_contains_at_least_2_elements:
 	cmp qword [ rcx + t_node.next ], NULL
-	je .load_the_local_variables
+	je .load_local_variables
 ; recursively call the `merge_sort` function on the sublist B
 	lea rdi, SUBLIST_B
 	call merge_sort
 align 16
-.load_the_local_variables:
+.load_local_variables:
 	mov r11, LIST
 	mov r12, SUBLIST_A
 	mov r13, SUBLIST_B
@@ -186,15 +186,15 @@ align 16
 ; initialize the merged list
 	mov [ r11 ], r14
 align 16
-.update_the_head_of_the_sublist_from_which_the_node_was_detached:
+.update_head_of_sublist_from_which_node_was_detached:
 	cmovle r12, [ r12 + t_node.next ] ; if <= 0 then the new 1st node of the sublist A is its current 2nd node
 	cmovg  r13, [ r13 + t_node.next ] ; if  > 0 then the new 1st node of the sublist B is its current 2nd node
 ; check if the sublist B is empty
 	test r13, r13
-	jz .append_the_sublist_A_to_the_merged_list
+	jz .append_sublist_A_to_merged_list
 ; check if the sublist A is empty
 	test r12, r12
-	jz .append_the_sublist_B_to_the_merged_list
+	jz .append_sublist_B_to_merged_list
 ; compare the 1st node's data of both sublists
 	mov rdi, [ r12 + t_node.data ]
 	mov rsi, [ r13 + t_node.data ]
@@ -208,17 +208,17 @@ align 16
 ; update the pointers
 	mov r14, rdx ; the new last node of the merged list
 ; repeat until either the sublist A or the sublist B is empty
-	jmp .update_the_head_of_the_sublist_from_which_the_node_was_detached
+	jmp .update_head_of_sublist_from_which_node_was_detached
 
 align 16
-.append_the_sublist_A_to_the_merged_list:
+.append_sublist_A_to_merged_list:
 	mov [ r14 + t_node.next ], r12
 ; restore the stack pointer
 	add rsp, STACK_SIZE
 	ret
 
 align 16
-.append_the_sublist_B_to_the_merged_list:
+.append_sublist_B_to_merged_list:
 	mov [ r14 + t_node.next ], r13
 ; restore the stack pointer
 	add rsp, STACK_SIZE

@@ -30,7 +30,7 @@ ft_list_remove_if:
 %define OLD_R13 [ rsp + 3 * QWORD_SIZE ]
 %define OLD_R14 [ rsp + 4 * QWORD_SIZE ]
 %define OLD_R15 [ rsp + 5 * QWORD_SIZE ]
-%define STACK_SIZE	    6 * QWORD_SIZE
+%define STACK_SIZE      6 * QWORD_SIZE
 
 ; check if the list is empty
 	cmp qword [ rdi ], NULL
@@ -56,9 +56,9 @@ ft_list_remove_if:
 	mov rsi, rbp
 	call r12
 	test eax, eax
-	jnz .find_the_next_matching_node
+	jnz .find_next_matching_node
 align 16
-.load_the_address_of_the_2nd_node_of_the_list:
+.load_address_of_2nd_node_of_list:
 	mov r15, [ r14 + t_node.next ]
 ; drop the data of the 1st node
 	mov rdi, [ r14 + t_node.data ]
@@ -68,7 +68,7 @@ align 16
 	call free wrt ..plt
 ; check if the end of the list is reached
 	test r15, r15
-	jz .set_the_1st_node_of_the_list_to_null
+	jz .set_1st_node_of_list_to_null
 ; update the pointers
 	mov r14, r15 ; the new 1st node of the list
 ; compare the data of the current node with the reference data
@@ -77,29 +77,29 @@ align 16
 	call r12
 	test eax, eax
 ; repeat until either the end of the list is reached or a node's data does not match the reference data
-	jz .load_the_address_of_the_2nd_node_of_the_list
+	jz .load_address_of_2nd_node_of_list
 ; update the pointers
 	mov [ rbx ], r14 ; the new 1st node of the list
 align 16
-.find_the_next_matching_node:
+.find_next_matching_node:
 ; update the pointers
 	mov rbx, [ r14 + t_node.next ] ; the new current node
 ; check if the end of the list is reached
 	test rbx, rbx
-	jz .restore_the_non_volatile_registers
+	jz .restore_non_volatile_registers
 ; compare the data of the current node with the reference data
 	mov rdi, [ rbx + t_node.data ]
 	mov rsi, rbp
 	call r12
 	test eax, eax
-	jz .find_the_next_mismatching_node
+	jz .find_next_mismatching_node
 ; update the pointers
 	mov r14, rbx ; the new previous node
 ; repeat until either the end of the list is reached or a node's data matches the reference data
-	jmp .find_the_next_matching_node
+	jmp .find_next_matching_node
 
 align 16
-.find_the_next_mismatching_node:
+.find_next_mismatching_node:
 ; update the pointers
 	mov r15, [ rbx + t_node.next ] ; the new next node
 ; drop the data of the current node
@@ -110,28 +110,28 @@ align 16
 	call free wrt ..plt
 ; check if the end of the list is reached
 	test r15, r15
-	jz .set_the_previous_node_as_the_last_node_of_the_list
+	jz .set_previous_node_as_last_node_of_list
 ; compare the data of the next node with the reference data
 	mov rdi, [ r15 + t_node.data ]
 	mov rsi, rbp
 	call r12
 	test eax, eax
-	jnz .link_the_previous_node_to_the_next_node
+	jnz .link_previous_node_to_next_node
 ; update the pointers
 	mov rbx, r15 ; the new current node
 ; repeat until either the end of the list is reached or a node's data does not match the reference data
-	jmp .find_the_next_mismatching_node
+	jmp .find_next_mismatching_node
 
 align 16
-.link_the_previous_node_to_the_next_node:
+.link_previous_node_to_next_node:
 	mov [ r14 + t_node.next ], r15
 ; update the pointers
 	mov r14, r15 ; the new previous node
 ; repeat the entire process until the end of the list is reached
-	jmp .find_the_next_matching_node
+	jmp .find_next_matching_node
 
 align 16
-.set_the_previous_node_as_the_last_node_of_the_list:
+.set_previous_node_as_last_node_of_list:
 	mov qword [ r14 + t_node.next ], NULL
 ; restore the non-volatile registers
 	mov r15, OLD_R15
@@ -145,7 +145,7 @@ align 16
 	ret
 
 align 16
-.set_the_1st_node_of_the_list_to_null:
+.set_1st_node_of_list_to_null:
 	mov qword [ rbx ], NULL
 ; restore the non-volatile registers
 	mov r15, OLD_R15
@@ -159,7 +159,7 @@ align 16
 	ret
 
 align 16
-.restore_the_non_volatile_registers:
+.restore_non_volatile_registers:
 	mov r15, OLD_R15
 	mov r14, OLD_R14
 	mov r13, OLD_R13

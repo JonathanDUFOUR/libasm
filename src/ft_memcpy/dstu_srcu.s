@@ -43,7 +43,7 @@ ft_memcpy_dstu_srcu:
 	jb .copy_less_than_545_bytes
 	COPY_THE_LAST_YWORD
 align 16
-.copy_the_next_16_intermediate_ywords:
+.copy_next_16_intermediate_ywords:
 ; update the number of intermediate bytes to copy
 	sub rdx, 512
 	jc .copy_less_than_16_intermediate_ywords
@@ -85,7 +85,7 @@ align 16
 	add rdi, 16 * YWORD_SIZE
 	add rsi, 16 * YWORD_SIZE
 ; repeat until there are less than 16 intermediate ywords to copy
-	jmp .copy_the_next_16_intermediate_ywords
+	jmp .copy_next_16_intermediate_ywords
 
 align 16
 .copy_less_than_16_intermediate_ywords:

@@ -46,7 +46,7 @@ ft_strlen_su:
 	mov rax, rdi
 	vpxor ymm0, ymm0, ymm0
 align 16
-.check_the_next_8_ywords:
+.check_next_8_ywords:
 ; load 4 of the next 8 ywords from the string
 	vmovdqu ymm1, [ rax + 0 * YWORD_SIZE ]
 	vmovdqu ymm2, [ rax + 2 * YWORD_SIZE ]
@@ -76,67 +76,58 @@ align 16
 ;             |      ,---ymm4  s[0xC0..=0xDF]
 ;             '---ymm8
 ;                    '-------  s[0xE0..=0xFF]
-
-; check if the resulting yword contains a null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0xFF, ymm11
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0xFF, ymm11
 ; update the pointer
 	add rax, 8 * YWORD_SIZE
 ; repeat until the next 8 ywords contain a null byte
-	jmp .check_the_next_8_ywords
+	jmp .check_next_8_ywords
 
 align 16
-.found_a_null_byte_between_the_indices_0x00_and_0xFF:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x7F, ymm9
-;found_a_null_byte_between_the_indices_0x80_and_0xFF:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0xBF, ymm7
-;found_a_null_byte_between_the_indices_0xC0_and_0xFF:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0xC0_and_0xDF, ymm4
-;found_a_null_byte_between_the_indices_0xE0_and_0xFF:
+.found_null_byte_in_0x00_0xFF:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm9
+;found_null_byte_in_0x80_0xFF:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0xBF, ymm7
+;found_null_byte_in_0xC0_0xFF:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm4
+;found_null_byte_in_0xE0_0xFF:
 	vpcmpeqb ymm12, ymm0, [ rax + 7 * YWORD_SIZE ]
 	RETURN_FINAL_LENGTH 0xE0
 
 align 16
-.found_a_null_byte_between_the_indices_0x00_and_0x7F:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x3F, ymm5
-;found_a_null_byte_between_the_indices_0x40_and_0x7F:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x40_and_0x5F, ymm2
-;found_a_null_byte_between_the_indices_0x60_and_0x7F:
+.found_null_byte_in_0x00_0x7F:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm5
+;found_null_byte_in_0x40_0x7F:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm2
+;found_null_byte_in_0x60_0x7F:
 	vpcmpeqb ymm12, ymm0, [ rax + 3 * YWORD_SIZE ]
 	RETURN_FINAL_LENGTH 0x60
 
 align 16
-.found_a_null_byte_between_the_indices_0x00_and_0x3F:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x00_and_0x1F, ymm1
-;found_a_null_byte_between_the_indices_0x20_and_0x3F:
+.found_null_byte_in_0x00_0x3F:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
+;found_null_byte_in_0x20_0x3F:
 	vpcmpeqb ymm12, ymm0, [ rax + 1 * YWORD_SIZE ]
 	RETURN_FINAL_LENGTH 0x20
 
 align 16
-.found_a_null_byte_between_the_indices_0x00_and_0x1F:
+.found_null_byte_in_0x00_0x1F:
 	RETURN_FINAL_LENGTH 0x00
 
 align 16
-.found_a_null_byte_between_the_indices_0x40_and_0x5F:
+.found_null_byte_in_0x40_0x5F:
 	RETURN_FINAL_LENGTH 0x40
 
 align 16
-.found_a_null_byte_between_the_indices_0x80_and_0xBF:
-; figure out which yword contains the 1st null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_a_null_byte_between_the_indices_0x80_and_0x9F, ymm3
-;found_a_null_byte_between_the_indices_0xA0_and_0xBF:
+.found_null_byte_in_0x80_0xBF:
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm3
+;found_null_byte_in_0xA0_0xBF:
 	vpcmpeqb ymm12, ymm0, [ rax + 5 * YWORD_SIZE ]
 	RETURN_FINAL_LENGTH 0xA0
 
 align 16
-.found_a_null_byte_between_the_indices_0x80_and_0x9F:
+.found_null_byte_in_0x80_0x9F:
 	RETURN_FINAL_LENGTH 0x80
 
 align 16
-.found_a_null_byte_between_the_indices_0xC0_and_0xDF:
+.found_null_byte_in_0xC0_0xDF:
 	RETURN_FINAL_LENGTH 0xC0
