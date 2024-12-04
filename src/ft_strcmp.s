@@ -59,7 +59,7 @@ ft_strcmp:
 ; calculate how har the 1st string is to its next yword boundary
 	mov rax, rdi
 	neg rax
-	and rax, YWORD_SIZE - 1 ; modulo YWORD_SIZE
+	and rax, YWORD_SIZE - 1
 ; advance both the 1st pointer and the 2nd pointer by the calculated distance
 	add rdi, rax
 	add rsi, rax

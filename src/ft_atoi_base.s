@@ -42,7 +42,7 @@ ft_atoi_base:
 
 ; preserve the stack pointer and align it to its previous yword boundary
 	mov rdx, rsp
-	and rsp, -YWORD_SIZE ; modulo YWORD_SIZE
+	and rsp, -YWORD_SIZE
 ; reserve space for the local constants/variables
 	sub rsp, DIGIT_ARRAY_SIZE
 ; preliminary initialization
@@ -54,6 +54,8 @@ ft_atoi_base:
 	vmovdqa [ rsp + offset ], ymm11
 	%assign offset offset + YWORD_SIZE
 %endrep
+; align the base pointer to its previous yword boundary
+	and rsi, -YWORD_SIZE
 ; load 4 of the maximum 8 ywords of the base
 ; (a valid base can contain at most 247 characters, which always fit 8 ywords)
 	vmovdqu ymm1, [ rsi + 0 * YWORD_SIZE ]
@@ -324,7 +326,7 @@ align 16
 	jne .advance_to_1st_non_whitespace_character
 ; align the string pointer to the next yword boundary
 	add rdi,  YWORD_SIZE
-	and rdi, -YWORD_SIZE ; modulo YWORD_SIZE
+	and rdi, -YWORD_SIZE
 align 16
 .look_for_non_whitespace_characters_in_next_yword:
 ; load the next yword from the string
@@ -376,7 +378,7 @@ align 16
 	xor rsi, rsi
 ; calculate how far the string pointer is to its previous yword boundary
 	mov r9, rdi
-	and r9, YWORD_SIZE - 1 ; modulo YWORD_SIZE
+	and r9, YWORD_SIZE - 1
 ; align the string pointer to its previous yword boundary
 	and rdi, -YWORD_SIZE
 ; load the 1st aligned yword from the string that contains a sign
@@ -453,7 +455,7 @@ align 16
 	jne .advance_to_1st_non_zero_digit_character
 ; align the string pointer to the next yword boundary
 	add rdi,  YWORD_SIZE
-	and rdi, -YWORD_SIZE ; modulo YWORD_SIZE
+	and rdi, -YWORD_SIZE
 align 16
 .look_for_non_zero_digit_characters_in_next_yword:
 ; load the next yword from the string
@@ -494,7 +496,7 @@ align 16
 
 align 16
 .apply_sign:
-	and rsi, 1 ; modulo 2
+	and rsi, 1
 	test rsi, rsi
 	jz .return
 	neg eax

@@ -27,7 +27,7 @@ ALIGNMODE p6
 ; calculate how far the destination area is to its next yword boundary
 	mov rcx, rdi
 	neg rcx
-	and rcx, YWORD_SIZE - 1 ; modulo YWORD_SIZE
+	and rcx, YWORD_SIZE - 1
 ; advance both pointers by the calculated distance
 	add rdi, rcx
 	add rsi, rcx

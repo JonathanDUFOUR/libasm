@@ -69,7 +69,7 @@ ft_strcpy:
 ; calculate how har the destination string is to its next yword boundary
 	mov rcx, rdi
 	neg rcx
-	and rcx, YWORD_SIZE - 1 ; modulo YWORD_SIZE
+	and rcx, YWORD_SIZE - 1
 ; advance both the destination pointer and the source pointer by the calculated distance
 	add rdi, rcx
 	add rsi, rcx
