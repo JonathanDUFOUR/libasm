@@ -57,6 +57,8 @@ ft_strcpy:
 ; preliminary initialization
 	mov rax, rdi
 	vpxor ymm0, ymm0, ymm0
+
+; TODO: handle the page crossing cases, to avoid page faults
 ; load the 1st yword from the soure string
 	vmovdqu ymm1, [ rsi ]
 ; calculate the index of the 1st null byte in the 1st yword if any

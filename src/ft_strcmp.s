@@ -50,6 +50,8 @@ align 16
 ft_strcmp:
 ; preliminary initialization
 	vpxor ymm0, ymm0, ymm0
+
+; TODO: handle the page crossing cases, to avoid page faults
 ; load the 1st yword of the 1st string
 	vmovdqu ymm1, [ rdi ]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1

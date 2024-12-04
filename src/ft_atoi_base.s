@@ -55,7 +55,7 @@ ft_atoi_base:
 	%assign offset offset + YWORD_SIZE
 %endrep
 
-; REMIND: can be improved by considering the alignment of the base pointer to avoid any page faults
+; TODO: handle the page crossing cases, to avoid page faults
 ; load 4 of the maximum 8 ywords of the base
 ; (a valid base can contain at most 247 characters, which always fit 8 ywords)
 	vmovdqu ymm1, [ rsi + 0 * YWORD_SIZE ]
