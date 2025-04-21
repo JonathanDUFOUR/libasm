@@ -126,9 +126,13 @@ align 16
 ; repeat until the next 8 ywords contain a null byte
 	jmp .check_next_8_ywords
 
+;---------------------------------------------+
+; figure out which yword contains a null byte |
+;             using binary search             |
+;---------------------------------------------+
+
 align 16
 .found_null_byte_in_0x00_0xFF:
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm13
 ;found_null_byte_in_0x80_0xFF:
 ; store the next 4 ywords to the destination string
@@ -136,13 +140,11 @@ align 16
 	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm2
 	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm3
 	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm4
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0xBF, ymm11
 ;found_null_byte_in_0xC0_0xFF:
 ; store the next 2 ywords to the destination string
 	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm5
 	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm6
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm7
 ;found_null_byte_in_0xE0_0xFF:
 ; store the next yword to the destination string
@@ -151,13 +153,11 @@ align 16
 
 align 16
 .found_null_byte_in_0x00_0x7F:
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm9
 ;found_null_byte_in_0x40_0x7F:
 ; store the next 2 ywords to the destination string
 	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm1
 	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm2
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm3
 ;found_null_byte_in_0x60_0x7F:
 ; store the next yword to the destination string
@@ -166,7 +166,6 @@ align 16
 
 align 16
 .found_null_byte_in_0x00_0x3F:
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
 ;found_null_byte_in_0x20_0x3F:
 ; store the next yword to the destination string
@@ -183,7 +182,6 @@ align 16
 
 align 16
 .found_null_byte_in_0x80_0xBF:
-; figure out which yword contains the null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm5
 ;found_null_byte_in_0xA0_0xBF:
 ; store the next yword to the destination string
