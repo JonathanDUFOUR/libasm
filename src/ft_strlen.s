@@ -55,9 +55,9 @@ ft_strlen:
 ; calculate the index of the 1st null byte in the 1st yword if any
 	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 	jnz .small_length
-; update the pointer to the next yword boundary:
+; update the pointer to the next yword boundary
 	add rax, YWORD_SIZE
-;is_pointer_aligned_to_2_ywords_boundary
+;is_pointer_aligned_to_2_ywords_boundary:
 	test rax, YWORD_SIZE
 	jz .is_pointer_aligned_to_4_ywords_boundary
 ; check if the next yword contains a null byte
