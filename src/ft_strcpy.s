@@ -56,36 +56,169 @@ align 16
 ft_strcpy:
 ; preliminary initialization
 	mov rax, rdi
+	mov r10, 0x0101010101010101
+	mov r11, 0x8080808080808080
 	vpxor ymm0, ymm0, ymm0
-
-; TODO: handle the page crossing cases, to avoid page faults
-; load the 1st yword from the soure string
-	vmovdqu ymm1, [ rsi ]
-; calculate the index of the 1st null byte in the 1st yword if any
-	vpcmpeqb ymm2, ymm0, ymm1
-	vpmovmskb rdx, ymm2
+;is_source_pointer_aligned_to_word_boundary:
+	test rsi, BYTE_SIZE
+	jz .is_source_pointer_aligned_to_dword_boundary
+; load the first byte from the source string
+	mov cl, [ rsi ]
+; check if the first byte is null
+	test cl, cl
+	jz .empty_string
+; store the first byte to the destination string
+	mov [ rdi ], cl
+; update the pointers
+	add rdi, BYTE_SIZE
+	add rsi, BYTE_SIZE
+align 16
+.is_source_pointer_aligned_to_dword_boundary:
+	test rsi, WORD_SIZE
+	jz .is_source_pointer_aligned_to_qword_boundary
+; load the first aligned word from the source string
+	mov cx, [ rsi ]
+; check if the first aligned word contains a null byte
+	mov r8w, cx
+	mov r9w, cx
+	sub r8w, r10w
+	not r9w
+	and r8w, r9w
+	and r8w, r11w
+	jnz .small_copy
+; store the first aligned word to the destination string
+	mov [ rdi ], cx
+; update the pointers
+	add rdi, WORD_SIZE
+	add rsi, WORD_SIZE
+align 16
+.is_source_pointer_aligned_to_qword_boundary:
+	test rsi, DWORD_SIZE
+	jz .is_source_pointer_aligned_to_oword_boundary
+; load the first aligned dword from the source string
+	mov ecx, [ rsi ]
+; check if the first aligned dword contains a null byte
+	mov r8d, ecx
+	mov r9d, ecx
+	sub r8d, r10d
+	not r9d
+	and r8d, r9d
+	and r8d, r11d
+	jnz .small_copy
+; store the first aligned dword to the destination string
+	mov [ rdi ], ecx
+; update the pointers
+	add rdi, DWORD_SIZE
+	add rsi, DWORD_SIZE
+align 16
+.is_source_pointer_aligned_to_oword_boundary:
+	test rsi, QWORD_SIZE
+	jz .is_source_pointer_aligned_to_yword_boundary
+; load the first aligned qword from the source string
+	mov rcx, [ rsi ]
+; check if the first aligned qword contains a null byte
+	mov r8, rcx
+	mov r9, rcx
+	sub r8, r10
+	not r9
+	and r8, r9
+	and r8, r11
+	jnz .small_copy
+; store the first aligned qword to the destination string
+	mov [ rdi ], rcx
+; update the pointers
+	add rdi, QWORD_SIZE
+	add rsi, QWORD_SIZE
+align 16
+.is_source_pointer_aligned_to_yword_boundary:
+	test rsi, OWORD_SIZE
+	jz .is_source_pointer_aligned_to_2_ywords_boundary
+; load the first aligned oword from the source string
+	movdqa xmm5, [ rsi ]
+; check if the first aligned oword contains a null byte
+	vpcmpeqb xmm6, xmm0, xmm5
+	vpmovmskb rdx, xmm6
 	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
 	jnz .copy_last_bytes
-; store the 1st yword to the destination string
+; store the first aligned oword to the destination string
+	movdqu [ rdi ], xmm5
+; update the pointers
+	add rdi, OWORD_SIZE
+	add rsi, OWORD_SIZE
+align 16
+.is_source_pointer_aligned_to_2_ywords_boundary:
+	test rsi, YWORD_SIZE
+	jz .is_source_pointer_aligned_to_4_ywords_boundary
+; load the first aligned yword
+	vmovdqa ymm1, [ rsi ]
+; check if the first aligned yword contains a null byte
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
+; store the first aligned yword to the destination string
 	vmovdqu [ rdi ], ymm1
-; calculate how har the destination string is to its next yword boundary
-	mov rcx, rdi
-	neg rcx
-	and rcx, YWORD_SIZE - 1
-; advance both the destination pointer and the source pointer by the calculated distance
-	add rdi, rcx
-	add rsi, rcx
+; update the pointers
+	add rdi, YWORD_SIZE
+	add rsi, YWORD_SIZE
+align 16
+.is_source_pointer_aligned_to_4_ywords_boundary:
+	test rsi, 2 * YWORD_SIZE
+	jz .is_source_pointer_aligned_to_8_ywords_boundary
+; load the first aligned 2 ywords from the source string
+	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
+	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
+; merge the 2 ywords into 1 yword that will contain their minimum byte values
+; (see the diagram below for a more visual representation of the process)
+	vpminub ymm9, ymm1, ymm2
+;    ,--- ymm1  src[0x00..=0x1F]
+; ymm9
+;    '--- ymm2  src[0x20..=0x3F]
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm9
+; store the first aligned 2 ywords to the destination string
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+; update pointers
+	add rdi, 2 * YWORD_SIZE
+	add rsi, 2 * YWORD_SIZE
+align 16
+.is_source_pointer_aligned_to_8_ywords_boundary:
+	test rsi, 4 * YWORD_SIZE
+	jz .check_next_8_ywords
+; load the first aligned 4 ywords from the source string
+	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
+	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
+	vmovdqa ymm3, [ rsi + 2 * YWORD_SIZE ]
+	vmovdqa ymm4, [ rsi + 3 * YWORD_SIZE ]
+; merge the 4 ywords into 1 yword that will contain their minimum byte values
+; (see the diagram below for a more visual representation of the process)
+	vpminub ymm9,  ymm1, ymm2
+	vpminub ymm10, ymm3, ymm4
+	vpminub ymm13, ymm9, ymm10
+;            ,----ymm1  src[0x00..=0x1F]
+;     ,---ymm9
+;     |      '----ymm2  src[0x20..=0x3F]
+; ymm13
+;     |       ,---ymm3  src[0x40..=0x5F]
+;     '---ymm10
+;             '---ymm4  src[0x60..=0x7F]
+	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm13
+; store the first aligned 4 ywords to the destination string
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
+	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
+; update pointers
+	add rdi, 4 * YWORD_SIZE
+	add rsi, 4 * YWORD_SIZE
 align 16
 .check_next_8_ywords:
 ; load the next 8 ywords from the source string
-	vmovdqu ymm1, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm6, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqu ymm7, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqu ymm8, [ rsi + 7 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
+	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
+	vmovdqa ymm3, [ rsi + 2 * YWORD_SIZE ]
+	vmovdqa ymm4, [ rsi + 3 * YWORD_SIZE ]
+	vmovdqa ymm5, [ rsi + 4 * YWORD_SIZE ]
+	vmovdqa ymm6, [ rsi + 5 * YWORD_SIZE ]
+	vmovdqa ymm7, [ rsi + 6 * YWORD_SIZE ]
+	vmovdqa ymm8, [ rsi + 7 * YWORD_SIZE ]
 ; merge the 8 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
 	vpminub ymm9,  ymm1,  ymm2
@@ -112,14 +245,14 @@ align 16
 ;                     '---ymm8  src[0xE0..=0xFF]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0xFF, ymm15
 ; store the next 8 ywords to the destination string
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi + 7 * YWORD_SIZE ], ymm8
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
+	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
+	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
+	vmovdqu [ rdi + 5 * YWORD_SIZE ], ymm6
+	vmovdqu [ rdi + 6 * YWORD_SIZE ], ymm7
+	vmovdqu [ rdi + 7 * YWORD_SIZE ], ymm8
 ; update the pointers
 	add rdi, 8 * YWORD_SIZE
 	add rsi, 8 * YWORD_SIZE
@@ -136,19 +269,19 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm13
 ;found_null_byte_in_0x80_0xFF:
 ; store the next 4 ywords to the destination string
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm4
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
+	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0xBF, ymm11
 ;found_null_byte_in_0xC0_0xFF:
 ; store the next 2 ywords to the destination string
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm6
+	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
+	vmovdqu [ rdi + 5 * YWORD_SIZE ], ymm6
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm7
 ;found_null_byte_in_0xE0_0xFF:
 ; store the next yword to the destination string
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm7
+	vmovdqu [ rdi + 6 * YWORD_SIZE ], ymm7
 	COPY_THE_LAST_BYTES_UP_TO_32 7, ymm8
 
 align 16
@@ -156,12 +289,12 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm9
 ;found_null_byte_in_0x40_0x7F:
 ; store the next 2 ywords to the destination string
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm3
 ;found_null_byte_in_0x60_0x7F:
 ; store the next yword to the destination string
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm3
+	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
 	COPY_THE_LAST_BYTES_UP_TO_32 3, ymm4
 
 align 16
@@ -169,7 +302,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
 ;found_null_byte_in_0x20_0x3F:
 ; store the next yword to the destination string
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
 	COPY_THE_LAST_BYTES_UP_TO_32 1, ymm2
 
 align 16
@@ -185,7 +318,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm5
 ;found_null_byte_in_0xA0_0xBF:
 ; store the next yword to the destination string
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm5
+	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
 	COPY_THE_LAST_BYTES_UP_TO_32 5, ymm6
 
 align 16
@@ -195,6 +328,26 @@ align 16
 align 16
 .found_null_byte_in_0xC0_0xDF:
 	COPY_THE_LAST_BYTES_UP_TO_32 6, ymm7
+
+;------------+
+; edge cases |
+;------------+
+
+align 16
+.empty_string:
+	mov [ rdi ], cl
+	ret
+
+align 16
+.small_copy:
+; calculate the index of the 1st null byte in the 1st aligned word
+	bsf rdx, r8 ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	shr rdx, 3 ; divide by 8
+
+;-------------------------------+
+;      copy the last bytes      |
+; including the null-terminator |
+;-------------------------------+
 
 align 16
 .copy_last_bytes:
