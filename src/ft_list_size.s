@@ -15,6 +15,7 @@ section .text
 ; rax: the number of nodes in the list.
 align 16
 ft_list_size:
+; preliminary initialization
 	xor rax, rax
 align 16
 .check_next_node:

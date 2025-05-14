@@ -17,7 +17,7 @@ ALIGNMODE p6
 	ret
 %endmacro
 
-%macro COPY_THE_FIRST_YWORD_AND_THE_LAST_YWORD_AND_ALIGN_THE_DESTINATION_POINTER 0
+%macro COPY_FIRST_AND_LAST_YWORD_AND_ALIGN_DESTINATION_POINTER 0
 ; copy the first and the last yword
 	sub rdx, YWORD_SIZE ; corresponds to the last yword that is about to be copied
 	vmovdqu ymm0, [ rsi ]
@@ -51,10 +51,9 @@ ft_memcpy:
 ; preliminary initialization
 	mov rax, rdi
 ; check if we can do a small copy
-	cmp rdx, 545
-	jb .copy_less_than_545_bytes
-	COPY_THE_FIRST_YWORD_AND_THE_LAST_YWORD_AND_ALIGN_THE_DESTINATION_POINTER
-align 16
+	cmp rdx, 2 * YWORD_SIZE + 1
+	jb .copy_less_than_65_bytes
+	COPY_FIRST_AND_LAST_YWORD_AND_ALIGN_DESTINATION_POINTER
 .copy_next_16_intermediate_ywords:
 ; update the number of intermediate bytes to copy
 	sub rdx, 16 * YWORD_SIZE
@@ -105,13 +104,11 @@ align 16
 	add rdx, 16 * YWORD_SIZE
 	shr rdx, 5 ; divide by YWORD_SIZE
 ; copy the remaining intermediate ywords
-	lea rcx, [ .small_copy_jump_table ]
+	lea rcx, [ .intermediate_yword_copy_jump_table ]
 	jmp [ rcx + rdx * QWORD_SIZE ]
 
 align 16
-.copy_less_than_545_bytes:
-	cmp edx, 64
-	ja .copy_between_65_and_544_bytes
+.copy_less_than_65_bytes:
 	cmp edx, 32
 	ja .copy_between_33_and_64_bytes
 	cmp edx, 16
@@ -173,14 +170,6 @@ align 16
 	vmovdqu [ rdi ], ymm0
 	vmovdqu [ rdi + rdx - YWORD_SIZE ], ymm1
 	VZEROUPPER_RET
-
-align 16
-.copy_between_65_and_544_bytes:
-	COPY_THE_FIRST_YWORD_AND_THE_LAST_YWORD_AND_ALIGN_THE_DESTINATION_POINTER
-; calculate how many intermediate ywords shall be copied
-	shr rdx, 5 ; divide by 32
-	lea rcx, [ .small_copy_jump_table ]
-	jmp [ rcx + rdx * QWORD_SIZE ]
 
 align 16
 .copy_1_yword:
@@ -519,7 +508,7 @@ align 16
 	VZEROUPPER_RET
 
 section .rodata
-.small_copy_jump_table:
+.intermediate_yword_copy_jump_table:
 	dq .copy_1_yword
 	dq .copy_2_ywords
 	dq .copy_3_ywords

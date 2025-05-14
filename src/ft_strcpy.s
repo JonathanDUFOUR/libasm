@@ -64,7 +64,7 @@ ft_strcpy:
 	jz .is_source_pointer_aligned_to_dword_boundary
 ; load the first byte from the source string
 	mov cl, [ rsi ]
-; check if the first byte is null
+; check if it is a null byte
 	test cl, cl
 	jz .empty_string
 ; store the first byte to the destination string
@@ -78,7 +78,7 @@ align 16
 	jz .is_source_pointer_aligned_to_qword_boundary
 ; load the first aligned word from the source string
 	mov cx, [ rsi ]
-; check if the first aligned word contains a null byte
+; check if it contains a null byte
 	mov r8w, cx
 	mov r9w, cx
 	sub r8w, r10w
@@ -97,7 +97,7 @@ align 16
 	jz .is_source_pointer_aligned_to_oword_boundary
 ; load the first aligned dword from the source string
 	mov ecx, [ rsi ]
-; check if the first aligned dword contains a null byte
+; check if it contains a null byte
 	mov r8d, ecx
 	mov r9d, ecx
 	sub r8d, r10d
@@ -116,7 +116,7 @@ align 16
 	jz .is_source_pointer_aligned_to_yword_boundary
 ; load the first aligned qword from the source string
 	mov rcx, [ rsi ]
-; check if the first aligned qword contains a null byte
+; check if it contains a null byte
 	mov r8, rcx
 	mov r9, rcx
 	sub r8, r10
@@ -135,7 +135,7 @@ align 16
 	jz .is_source_pointer_aligned_to_2_ywords_boundary
 ; load the first aligned oword from the source string
 	movdqa xmm5, [ rsi ]
-; check if the first aligned oword contains a null byte
+; check if it contains a null byte
 	vpcmpeqb xmm6, xmm0, xmm5
 	vpmovmskb rdx, xmm6
 	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
@@ -151,7 +151,7 @@ align 16
 	jz .is_source_pointer_aligned_to_4_ywords_boundary
 ; load the first aligned yword
 	vmovdqa ymm1, [ rsi ]
-; check if the first aligned yword contains a null byte
+; check if it contains a null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
 ; store the first aligned yword to the destination string
 	vmovdqu [ rdi ], ymm1
