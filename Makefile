@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2024/12/04 17:36:45 by jodufour         ###   ########.fr        #
+#    Updated: 2025/05/01 05:53:04 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,6 +36,7 @@ OBJ_DIR := obj
 SRC := \
 	${addsuffix .s, \
 		${addprefix ft_, \
+			memcmp \
 			memcpy \
 			read \
 			strcmp \
