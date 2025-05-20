@@ -6,14 +6,14 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2025/05/01 05:53:04 by jodufour         ###   ########.fr        #
+#    Updated: 2025/05/20 16:59:33 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ######################################
 #              COMMANDS              #
 ######################################
-   AS := ${shell which nasm}
+ NASM := ${shell which nasm}
    AR := ${shell which ar} rcs
 MKDIR := ${shell which mkdir} -p
    RM := ${shell which rm} -rf
@@ -72,13 +72,13 @@ BONUS_DEP := ${BONUS_OBJ:.o=.d}
 #######################################
 #                FLAGS                #
 #######################################
-AFLAGS := \
+NASM_FLAGS := \
 	-f elf64 \
 	-werror \
 	-I ${SRC_DIR} \
 
 ifeq (${DEBUG}, 1)
-	AFLAGS += -g
+	NASM_FLAGS += -g
 endif
 
 #######################################
@@ -101,7 +101,7 @@ ${BONUS_NAME}: ${BONUS_OBJ}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	@${MKDIR} ${@D}
-	${strip ${AS} ${AFLAGS} -MD ${@:.o=.d} $< ${OUTPUT_OPTION}}
+	${strip ${NASM} ${NASM_FLAGS} -MD ${@:.o=.d} $< ${OUTPUT_OPTION}}
 
 .PHONY: clean
 clean:
