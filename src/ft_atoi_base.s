@@ -233,7 +233,7 @@ align 16
 align 16
 .check_and_save_last_partial_yword_of_base_as_digits:
 ; calculate the index of the null byte in the last partial yword of the base
-	bsf ecx, r9d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
 	test ecx, ecx
 	jz .parse_string
 ; load the next yword from the base
@@ -275,7 +275,7 @@ align 16
 ; ignore the unwanted trailing bytes
 	mov r10b, YWORD_SIZE
 	sub r10b, cl
-	shlx r11d, r11d, r10d ; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
+	shlx r11d, r11d, r10d
 ; check that the partial yword contains no forbidden characters
 	test r11d, r11d
 	jnz .return
@@ -373,7 +373,7 @@ align 16
 .advance_to_1st_non_whitespace_character:
 ; calculate the index of the 1st non-whitespace character in the next yword of the string
 	not r9d
-	bsf ecx, r9d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
 ; update the string pointer
 	add rdi, rcx
 ; broadcast the zero-digit to the YMM register for the upcoming comparisons
@@ -401,8 +401,8 @@ align 16
 ; reverse the sign-mask to represent the non-sign characters
 	not r10d
 ; ignore the unwanted leading bytes
-	shrx r10d, r10d, r9d ; REMIND: this is for little-endian. Use shlx instead of shrx for big-endian.
-	shrx r11d, r11d, r9d ; REMIND: this is for little-endian. Use shlx instead of shrx for big-endian.
+	shrx r10d, r10d, r9d
+	shrx r11d, r11d, r9d
 ; check if the yword contains a non-sign character
 	test r10d, r10d
 	jz .process_signs
@@ -437,11 +437,11 @@ align 16
 align 16
 .advance_to_1st_non_sign_character:
 ; calculate the index of the 1st non-sign character in the next yword of the string
-	bsf ecx, r10d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r10d
 ; ignore the unwanted trailing bytes
 	mov r9b, YWORD_SIZE-1
 	sub r9b, cl
-	shlx r11d, r11d, r9d ; REMIND: this is for little-endian. Use shrx instead of shlx for big-endian.
+	shlx r11d, r11d, r9d
 ; process the minus signs
 	popcnt r11d, r11d
 	add rsi, r11
@@ -479,7 +479,7 @@ align 16
 .advance_to_1st_non_zero_digit_character:
 ; calculate the index of the 1st non-zero-digit character in the next yword of the string
 	not r9d
-	bsf ecx, r9d ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, r9d
 ; update the string pointer
 	add rdi, rcx
 align 16

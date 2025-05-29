@@ -35,7 +35,7 @@ ALIGNMODE p6
 ; calculate the index of the 1st null byte in the given YMM register
 	vpcmpeqb ymm0, ymm0, %2
 	vpmovmskb rdx, ymm0
-	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf edx, edx
 	jmp .copy_last_bytes
 %endmacro
 
@@ -142,7 +142,7 @@ align 16
 ; check if it contains a null byte
 	vpcmpeqb xmm6, xmm0, xmm5
 	vpmovmskb rdx, xmm6
-	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf edx, edx
 	jnz .copy_last_bytes
 ; store the first aligned oword to the destination string
 	movdqu [ rdi ], xmm5
@@ -345,7 +345,7 @@ align 16
 align 16
 .small_copy:
 ; calculate the index of the 1st null byte in the 1st aligned word
-	bsf rdx, r8 ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf rdx, r8
 	shr rdx, 3 ; divide by 8
 
 ;-------------------------------+
