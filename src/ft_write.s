@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags:
+
 global ft_write: function
 
 extern __errno_location: function

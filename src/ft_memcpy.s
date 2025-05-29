@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags: AVX2
+
 global ft_memcpy: function
 
 default rel
@@ -157,10 +161,10 @@ align 16
 
 align 16
 .copy_between_17_and_32_bytes:
-	movdqu xmm0, [ rsi ]
-	movdqu xmm1, [ rsi + rdx - OWORD_SIZE ]
-	movdqu [ rdi ], xmm0
-	movdqu [ rdi + rdx - OWORD_SIZE ], xmm1
+	vmovdqu xmm0, [ rsi ]
+	vmovdqu xmm1, [ rsi + rdx - OWORD_SIZE ]
+	vmovdqu [ rdi ], xmm0
+	vmovdqu [ rdi + rdx - OWORD_SIZE ], xmm1
 	ret
 
 align 16

@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags: AVX2, BMI1, BMI2, POPCNT
+
 global ft_atoi_base: function
 
 default rel

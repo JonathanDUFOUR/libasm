@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags: CMOV
+
 global ft_list_sort: function
 
 %use smartalign

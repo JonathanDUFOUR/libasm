@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags: AVX2
+
 global ft_strcpy: function
 
 %use smartalign

@@ -1,3 +1,7 @@
+; Architecture: x86-64
+; Endianness: little-endian
+; CPUID feature flags: AVX2, BMI2
+
 global ft_strlen: function
 
 %use smartalign
@@ -24,7 +28,7 @@ ALIGNMODE p6
 %macro RETURN_FINAL_LENGTH 1
 ; calculate the index of the 1st null byte in the given YMM register
 	vpmovmskb rcx, ymm12
-	bsf ecx, ecx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf ecx, ecx
 ; update the pointer to its final position
 	lea rax, [ rax + %1 + rcx ]
 ; calculate the length
@@ -51,9 +55,9 @@ ft_strlen:
 	vpcmpeqb ymm12, ymm0, [ rax ]
 	vpmovmskb rdx, ymm12
 ; ignore the unwanted leading bytes
-	shrx edx, edx, edi ; REMIND: this is for little-endian. Use shlx instead of shrx for big-endian.
+	shrx edx, edx, edi
 ; calculate the index of the 1st null byte in the 1st yword if any
-	bsf edx, edx ; REMIND: this is for little-endian. Use bsr instead of bsf for big-endian.
+	bsf edx, edx
 	jnz .small_length
 ; update the pointer to the next yword boundary
 	add rax, YWORD_SIZE
