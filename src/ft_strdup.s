@@ -22,9 +22,9 @@ section .text
 align 16
 ft_strdup:
 
-%define S   [ rsp + 0 * QWORD_SIZE ]
-%define LEN [ rsp + 1 * QWORD_SIZE ]
-%define STACK_SIZE  2 * QWORD_SIZE
+%define S   [ rsp + QWORD_SIZE * 0 ]
+%define LEN [ rsp + QWORD_SIZE * 1 ]
+%define STACK_SIZE  QWORD_SIZE * 2
 
 ; calculate how many bytes shall be allocated
 	call ft_strlen

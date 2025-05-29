@@ -66,30 +66,30 @@ ft_strlen:
 	add rax, YWORD_SIZE
 align 16
 .is_pointer_aligned_to_4_ywords_boundary:
-	test rax, 2 * YWORD_SIZE
+	test rax, YWORD_SIZE * 2
 	jz .is_pointer_aligned_to_8_ywords_boundary
 ; load 1 of the next 2 ywords from the string
-	vmovdqa ymm1, [ rax + 0 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
 ; merge the 2 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5, ymm1, [ rax + 1 * YWORD_SIZE ]
+	vpminub ymm5, ymm1, [ rax + YWORD_SIZE * 1 ]
 ;    ,---ymm1  s[0x00..=0x1F]
 ; ymm5
 ;    '-------  s[0x20..=0x3F]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm5
 ; update the pointer to the next 4-ywords boundary
-	add rax, 2 * YWORD_SIZE
+	add rax, YWORD_SIZE * 2
 align 16
 .is_pointer_aligned_to_8_ywords_boundary:
-	test rax, 4 * YWORD_SIZE
+	test rax, YWORD_SIZE * 4
 	jz .check_next_8_ywords
 ; load 2 of the next 4 ywords from the string
-	vmovdqa ymm1, [ rax + 0 * YWORD_SIZE ]
-	vmovdqa ymm2, [ rax + 2 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
+	vmovdqa ymm2, [ rax + YWORD_SIZE * 2 ]
 ; merge the 4 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5, ymm1, [ rax + 1 * YWORD_SIZE ]
-	vpminub ymm6, ymm2, [ rax + 3 * YWORD_SIZE ]
+	vpminub ymm5, ymm1, [ rax + YWORD_SIZE * 1 ]
+	vpminub ymm6, ymm2, [ rax + YWORD_SIZE * 3 ]
 	vpminub ymm9, ymm5, ymm6
 ;            ,---ymm1  s[0x00..=0x1F]
 ;    ,----ymm5
@@ -100,20 +100,20 @@ align 16
 ;            '-------  s[0x60..=0x7F]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm9
 ; update the pointer to the next 8-ywords boundary
-	add rax, 4 * YWORD_SIZE
+	add rax, YWORD_SIZE * 4
 align 16
 .check_next_8_ywords:
 ; load 4 of the next 8 ywords from the string
-	vmovdqa ymm1, [ rax + 0 * YWORD_SIZE ]
-	vmovdqa ymm2, [ rax + 2 * YWORD_SIZE ]
-	vmovdqa ymm3, [ rax + 4 * YWORD_SIZE ]
-	vmovdqa ymm4, [ rax + 6 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
+	vmovdqa ymm2, [ rax + YWORD_SIZE * 2 ]
+	vmovdqa ymm3, [ rax + YWORD_SIZE * 4 ]
+	vmovdqa ymm4, [ rax + YWORD_SIZE * 6 ]
 ; merge the 8 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5,  ymm1, [ rax + 1 * YWORD_SIZE ]
-	vpminub ymm6,  ymm2, [ rax + 3 * YWORD_SIZE ]
-	vpminub ymm7,  ymm3, [ rax + 5 * YWORD_SIZE ]
-	vpminub ymm8,  ymm4, [ rax + 7 * YWORD_SIZE ]
+	vpminub ymm5,  ymm1, [ rax + YWORD_SIZE * 1 ]
+	vpminub ymm6,  ymm2, [ rax + YWORD_SIZE * 3 ]
+	vpminub ymm7,  ymm3, [ rax + YWORD_SIZE * 5 ]
+	vpminub ymm8,  ymm4, [ rax + YWORD_SIZE * 7 ]
 	vpminub ymm9,  ymm5, ymm6
 	vpminub ymm10, ymm7, ymm8
 	vpminub ymm11, ymm9, ymm10
@@ -134,7 +134,7 @@ align 16
 ;                    '-------  s[0xE0..=0xFF]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0xFF, ymm11
 ; update the pointer
-	add rax, 8 * YWORD_SIZE
+	add rax, YWORD_SIZE * 8
 ; repeat until the next 8 ywords contain a null byte
 	jmp .check_next_8_ywords
 
@@ -151,7 +151,7 @@ align 16
 ;found_null_byte_in_0xC0_0xFF:
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm4
 ;found_null_byte_in_0xE0_0xFF:
-	vpcmpeqb ymm12, ymm0, [ rax + 7 * YWORD_SIZE ]
+	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 7 ]
 	RETURN_FINAL_LENGTH 0xE0
 
 align 16
@@ -160,14 +160,14 @@ align 16
 ;found_null_byte_in_0x40_0x7F:
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm2
 ;found_null_byte_in_0x60_0x7F:
-	vpcmpeqb ymm12, ymm0, [ rax + 3 * YWORD_SIZE ]
+	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 3 ]
 	RETURN_FINAL_LENGTH 0x60
 
 align 16
 .found_null_byte_in_0x00_0x3F:
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
 ;found_null_byte_in_0x20_0x3F:
-	vpcmpeqb ymm12, ymm0, [ rax + 1 * YWORD_SIZE ]
+	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 1 ]
 	RETURN_FINAL_LENGTH 0x20
 
 align 16
@@ -182,7 +182,7 @@ align 16
 .found_null_byte_in_0x80_0xBF:
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm3
 ;found_null_byte_in_0xA0_0xBF:
-	vpcmpeqb ymm12, ymm0, [ rax + 5 * YWORD_SIZE ]
+	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 5 ]
 	RETURN_FINAL_LENGTH 0xA0
 
 align 16

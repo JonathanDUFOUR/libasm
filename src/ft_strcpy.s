@@ -25,8 +25,8 @@ ALIGNMODE p6
 %macro COPY_THE_LAST_BYTES_UP_TO_32 2
 %if %1 > 0
 ; update the pointers
-	add rdi, %1 * YWORD_SIZE
-	add rsi, %1 * YWORD_SIZE
+	add rdi, YWORD_SIZE * %1
+	add rsi, YWORD_SIZE * %1
 %endif
 ; calculate the index of the 1st null byte in the given YMM register
 	vpcmpeqb ymm0, ymm0, %2
@@ -160,11 +160,11 @@ align 16
 	add rsi, YWORD_SIZE
 align 16
 .is_source_pointer_aligned_to_4_ywords_boundary:
-	test rsi, 2 * YWORD_SIZE
+	test rsi, YWORD_SIZE * 2
 	jz .is_source_pointer_aligned_to_8_ywords_boundary
 ; load the first aligned 2 ywords from the source string
-	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqa ymm2, [ rsi + YWORD_SIZE * 1 ]
 ; merge the 2 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
 	vpminub ymm9, ymm1, ymm2
@@ -173,20 +173,20 @@ align 16
 ;    '--- ymm2  src[0x20..=0x3F]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm9
 ; store the first aligned 2 ywords to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 1 ], ymm2
 ; update pointers
-	add rdi, 2 * YWORD_SIZE
-	add rsi, 2 * YWORD_SIZE
+	add rdi, YWORD_SIZE * 2
+	add rsi, YWORD_SIZE * 2
 align 16
 .is_source_pointer_aligned_to_8_ywords_boundary:
-	test rsi, 4 * YWORD_SIZE
+	test rsi, YWORD_SIZE * 4
 	jz .check_next_8_ywords
 ; load the first aligned 4 ywords from the source string
-	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqa ymm3, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqa ymm4, [ rsi + 3 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqa ymm2, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqa ymm3, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqa ymm4, [ rsi + YWORD_SIZE * 3 ]
 ; merge the 4 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
 	vpminub ymm9,  ymm1, ymm2
@@ -201,24 +201,24 @@ align 16
 ;             '---ymm4  src[0x60..=0x7F]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm13
 ; store the first aligned 4 ywords to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
-	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
-	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 1 ], ymm2
+	vmovdqu [ rdi + YWORD_SIZE * 2 ], ymm3
+	vmovdqu [ rdi + YWORD_SIZE * 3 ], ymm4
 ; update pointers
-	add rdi, 4 * YWORD_SIZE
-	add rsi, 4 * YWORD_SIZE
+	add rdi, YWORD_SIZE * 4
+	add rsi, YWORD_SIZE * 4
 align 16
 .check_next_8_ywords:
 ; load the next 8 ywords from the source string
-	vmovdqa ymm1, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqa ymm2, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqa ymm3, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqa ymm4, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqa ymm5, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqa ymm6, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqa ymm7, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqa ymm8, [ rsi + 7 * YWORD_SIZE ]
+	vmovdqa ymm1, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqa ymm2, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqa ymm3, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqa ymm4, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqa ymm5, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqa ymm6, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqa ymm7, [ rsi + YWORD_SIZE * 6 ]
+	vmovdqa ymm8, [ rsi + YWORD_SIZE * 7 ]
 ; merge the 8 ywords into 1 yword that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
 	vpminub ymm9,  ymm1,  ymm2
@@ -245,17 +245,17 @@ align 16
 ;                     '---ymm8  src[0xE0..=0xFF]
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0xFF, ymm15
 ; store the next 8 ywords to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
-	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
-	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
-	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
-	vmovdqu [ rdi + 5 * YWORD_SIZE ], ymm6
-	vmovdqu [ rdi + 6 * YWORD_SIZE ], ymm7
-	vmovdqu [ rdi + 7 * YWORD_SIZE ], ymm8
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 1 ], ymm2
+	vmovdqu [ rdi + YWORD_SIZE * 2 ], ymm3
+	vmovdqu [ rdi + YWORD_SIZE * 3 ], ymm4
+	vmovdqu [ rdi + YWORD_SIZE * 4 ], ymm5
+	vmovdqu [ rdi + YWORD_SIZE * 5 ], ymm6
+	vmovdqu [ rdi + YWORD_SIZE * 6 ], ymm7
+	vmovdqu [ rdi + YWORD_SIZE * 7 ], ymm8
 ; update the pointers
-	add rdi, 8 * YWORD_SIZE
-	add rsi, 8 * YWORD_SIZE
+	add rdi, YWORD_SIZE * 8
+	add rsi, YWORD_SIZE * 8
 ; repeat until the next 8 ywords contain a null byte
 	jmp .check_next_8_ywords
 
@@ -269,19 +269,19 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm13
 ;found_null_byte_in_0x80_0xFF:
 ; store the next 4 ywords to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
-	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
-	vmovdqu [ rdi + 3 * YWORD_SIZE ], ymm4
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 1 ], ymm2
+	vmovdqu [ rdi + YWORD_SIZE * 2 ], ymm3
+	vmovdqu [ rdi + YWORD_SIZE * 3 ], ymm4
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0xBF, ymm11
 ;found_null_byte_in_0xC0_0xFF:
 ; store the next 2 ywords to the destination string
-	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
-	vmovdqu [ rdi + 5 * YWORD_SIZE ], ymm6
+	vmovdqu [ rdi + YWORD_SIZE * 4 ], ymm5
+	vmovdqu [ rdi + YWORD_SIZE * 5 ], ymm6
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm7
 ;found_null_byte_in_0xE0_0xFF:
 ; store the next yword to the destination string
-	vmovdqu [ rdi + 6 * YWORD_SIZE ], ymm7
+	vmovdqu [ rdi + YWORD_SIZE * 6 ], ymm7
 	COPY_THE_LAST_BYTES_UP_TO_32 7, ymm8
 
 align 16
@@ -289,12 +289,12 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm9
 ;found_null_byte_in_0x40_0x7F:
 ; store the next 2 ywords to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
-	vmovdqu [ rdi + 1 * YWORD_SIZE ], ymm2
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 1 ], ymm2
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm3
 ;found_null_byte_in_0x60_0x7F:
 ; store the next yword to the destination string
-	vmovdqu [ rdi + 2 * YWORD_SIZE ], ymm3
+	vmovdqu [ rdi + YWORD_SIZE * 2 ], ymm3
 	COPY_THE_LAST_BYTES_UP_TO_32 3, ymm4
 
 align 16
@@ -302,7 +302,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
 ;found_null_byte_in_0x20_0x3F:
 ; store the next yword to the destination string
-	vmovdqu [ rdi + 0 * YWORD_SIZE ], ymm1
+	vmovdqu [ rdi + YWORD_SIZE * 0 ], ymm1
 	COPY_THE_LAST_BYTES_UP_TO_32 1, ymm2
 
 align 16
@@ -318,7 +318,7 @@ align 16
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm5
 ;found_null_byte_in_0xA0_0xBF:
 ; store the next yword to the destination string
-	vmovdqu [ rdi + 4 * YWORD_SIZE ], ymm5
+	vmovdqu [ rdi + YWORD_SIZE * 4 ], ymm5
 	COPY_THE_LAST_BYTES_UP_TO_32 5, ymm6
 
 align 16

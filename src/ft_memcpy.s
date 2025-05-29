@@ -24,7 +24,7 @@ ALIGNMODE p6
 	vmovdqu ymm1, [ rsi + rdx ]
 	vmovdqu [ rdi ], ymm0
 	vmovdqu [ rdi + rdx ], ymm1
-; calculate how far the destination area is to its next yword boundary
+; calculate how far the destination area is from its next yword boundary
 	mov rcx, rdi
 	neg rcx
 	and rcx, YWORD_SIZE - 1
@@ -51,57 +51,57 @@ ft_memcpy:
 ; preliminary initialization
 	mov rax, rdi
 ; check if we can do a small copy
-	cmp rdx, 2 * YWORD_SIZE + 1
+	cmp rdx, YWORD_SIZE * 2 + 1
 	jb .copy_less_than_65_bytes
 	COPY_FIRST_AND_LAST_YWORD_AND_ALIGN_DESTINATION_POINTER
 .copy_next_16_intermediate_ywords:
 ; update the number of intermediate bytes to copy
-	sub rdx, 16 * YWORD_SIZE
+	sub rdx, YWORD_SIZE * 16
 	jc .copy_less_than_16_intermediate_ywords
 ; load the next 16 intermediate ywords from the source memory area
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqu ymm12, [ rsi + 12 * YWORD_SIZE ]
-	vmovdqu ymm13, [ rsi + 13 * YWORD_SIZE ]
-	vmovdqu ymm14, [ rsi + 14 * YWORD_SIZE ]
-	vmovdqu ymm15, [ rsi + 15 * YWORD_SIZE ]
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqu ymm12, [ rsi + YWORD_SIZE * 12 ]
+	vmovdqu ymm13, [ rsi + YWORD_SIZE * 13 ]
+	vmovdqu ymm14, [ rsi + YWORD_SIZE * 14 ]
+	vmovdqu ymm15, [ rsi + YWORD_SIZE * 15 ]
 ; store the next 16 intermediate ywords to the destination memory area
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
-	vmovdqa [ rdi + 12 * YWORD_SIZE ], ymm12
-	vmovdqa [ rdi + 13 * YWORD_SIZE ], ymm13
-	vmovdqa [ rdi + 14 * YWORD_SIZE ], ymm14
-	vmovdqa [ rdi + 15 * YWORD_SIZE ], ymm15
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
+	vmovdqa [ rdi + YWORD_SIZE * 12 ], ymm12
+	vmovdqa [ rdi + YWORD_SIZE * 13 ], ymm13
+	vmovdqa [ rdi + YWORD_SIZE * 14 ], ymm14
+	vmovdqa [ rdi + YWORD_SIZE * 15 ], ymm15
 ; update the pointers
-	add rdi, 16 * YWORD_SIZE
-	add rsi, 16 * YWORD_SIZE
+	add rdi, YWORD_SIZE * 16
+	add rsi, YWORD_SIZE * 16
 ; repeat until there are less than 16 intermediate ywords to copy
 	jmp .copy_next_16_intermediate_ywords
 
 align 16
 .copy_less_than_16_intermediate_ywords:
 ; calculate how many intermediate ywords remain to be copied
-	add rdx, 16 * YWORD_SIZE
+	add rdx, YWORD_SIZE * 16
 	shr rdx, 5 ; divide by YWORD_SIZE
 ; copy the remaining intermediate ywords
 	lea rcx, [ .intermediate_yword_copy_jump_table ]
@@ -179,332 +179,332 @@ align 16
 
 align 16
 .copy_2_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
 	VZEROUPPER_RET
 
 align 16
 .copy_3_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
 	VZEROUPPER_RET
 
 align 16
 .copy_4_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
 	VZEROUPPER_RET
 
 align 16
 .copy_5_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
 	VZEROUPPER_RET
 
 align 16
 .copy_6_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm5
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE * 5 ], ymm5
 	VZEROUPPER_RET
 
 align 16
 .copy_7_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqu ymm6, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm6
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqu ymm6, [ rsi + YWORD_SIZE * 6 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE * 5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE * 6 ], ymm6
 	VZEROUPPER_RET
 
 align 16
 .copy_8_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqu ymm6, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqu ymm7, [ rsi + 7 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi + 7 * YWORD_SIZE ], ymm7
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqu ymm6, [ rsi + YWORD_SIZE * 6 ]
+	vmovdqu ymm7, [ rsi + YWORD_SIZE * 7 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE * 5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE * 6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE * 7 ], ymm7
 	VZEROUPPER_RET
 
 align 16
 .copy_9_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqu ymm6, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqu ymm7, [ rsi + 7 * YWORD_SIZE ]
-	vmovdqu ymm8, [ rsi + 8 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi + 7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi + 8 * YWORD_SIZE ], ymm8
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqu ymm6, [ rsi + YWORD_SIZE * 6 ]
+	vmovdqu ymm7, [ rsi + YWORD_SIZE * 7 ]
+	vmovdqu ymm8, [ rsi + YWORD_SIZE * 8 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE * 5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE * 6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE * 7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE * 8 ], ymm8
 	VZEROUPPER_RET
 
 align 16
 .copy_10_ywords:
-	vmovdqu ymm0, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 3 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ rsi + 5 * YWORD_SIZE ]
-	vmovdqu ymm6, [ rsi + 6 * YWORD_SIZE ]
-	vmovdqu ymm7, [ rsi + 7 * YWORD_SIZE ]
-	vmovdqu ymm8, [ rsi + 8 * YWORD_SIZE ]
-	vmovdqu ymm9, [ rsi + 9 * YWORD_SIZE ]
-	vmovdqa [ rdi + 0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi + 1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi + 2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi + 3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi + 4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi + 5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi + 6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi + 7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi + 8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi + 9 * YWORD_SIZE ], ymm9
+	vmovdqu ymm0, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 3 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ rsi + YWORD_SIZE * 5 ]
+	vmovdqu ymm6, [ rsi + YWORD_SIZE * 6 ]
+	vmovdqu ymm7, [ rsi + YWORD_SIZE * 7 ]
+	vmovdqu ymm8, [ rsi + YWORD_SIZE * 8 ]
+	vmovdqu ymm9, [ rsi + YWORD_SIZE * 9 ]
+	vmovdqa [ rdi + YWORD_SIZE * 0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE * 1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE * 2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE * 3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE * 4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE * 5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE * 6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE * 7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE * 8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE * 9 ], ymm9
 	VZEROUPPER_RET
 
 align 16
 .copy_11_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
 	VZEROUPPER_RET
 
 align 16
 .copy_12_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
 	VZEROUPPER_RET
 
 align 16
 .copy_13_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqu ymm12, [ rsi + 12 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
-	vmovdqa [ rdi + 12 * YWORD_SIZE ], ymm12
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqu ymm12, [ rsi + YWORD_SIZE * 12 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
+	vmovdqa [ rdi + YWORD_SIZE * 12 ], ymm12
 	VZEROUPPER_RET
 
 align 16
 .copy_14_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqu ymm12, [ rsi + 12 * YWORD_SIZE ]
-	vmovdqu ymm13, [ rsi + 13 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
-	vmovdqa [ rdi + 12 * YWORD_SIZE ], ymm12
-	vmovdqa [ rdi + 13 * YWORD_SIZE ], ymm13
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqu ymm12, [ rsi + YWORD_SIZE * 12 ]
+	vmovdqu ymm13, [ rsi + YWORD_SIZE * 13 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
+	vmovdqa [ rdi + YWORD_SIZE * 12 ], ymm12
+	vmovdqa [ rdi + YWORD_SIZE * 13 ], ymm13
 	VZEROUPPER_RET
 
 align 16
 .copy_15_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqu ymm12, [ rsi + 12 * YWORD_SIZE ]
-	vmovdqu ymm13, [ rsi + 13 * YWORD_SIZE ]
-	vmovdqu ymm14, [ rsi + 14 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
-	vmovdqa [ rdi + 12 * YWORD_SIZE ], ymm12
-	vmovdqa [ rdi + 13 * YWORD_SIZE ], ymm13
-	vmovdqa [ rdi + 14 * YWORD_SIZE ], ymm14
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqu ymm12, [ rsi + YWORD_SIZE * 12 ]
+	vmovdqu ymm13, [ rsi + YWORD_SIZE * 13 ]
+	vmovdqu ymm14, [ rsi + YWORD_SIZE * 14 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
+	vmovdqa [ rdi + YWORD_SIZE * 12 ], ymm12
+	vmovdqa [ rdi + YWORD_SIZE * 13 ], ymm13
+	vmovdqa [ rdi + YWORD_SIZE * 14 ], ymm14
 	VZEROUPPER_RET
 
 align 16
 .copy_16_ywords:
-	vmovdqu ymm0,  [ rsi +  0 * YWORD_SIZE ]
-	vmovdqu ymm1,  [ rsi +  1 * YWORD_SIZE ]
-	vmovdqu ymm2,  [ rsi +  2 * YWORD_SIZE ]
-	vmovdqu ymm3,  [ rsi +  3 * YWORD_SIZE ]
-	vmovdqu ymm4,  [ rsi +  4 * YWORD_SIZE ]
-	vmovdqu ymm5,  [ rsi +  5 * YWORD_SIZE ]
-	vmovdqu ymm6,  [ rsi +  6 * YWORD_SIZE ]
-	vmovdqu ymm7,  [ rsi +  7 * YWORD_SIZE ]
-	vmovdqu ymm8,  [ rsi +  8 * YWORD_SIZE ]
-	vmovdqu ymm9,  [ rsi +  9 * YWORD_SIZE ]
-	vmovdqu ymm10, [ rsi + 10 * YWORD_SIZE ]
-	vmovdqu ymm11, [ rsi + 11 * YWORD_SIZE ]
-	vmovdqu ymm12, [ rsi + 12 * YWORD_SIZE ]
-	vmovdqu ymm13, [ rsi + 13 * YWORD_SIZE ]
-	vmovdqu ymm14, [ rsi + 14 * YWORD_SIZE ]
-	vmovdqu ymm15, [ rsi + 15 * YWORD_SIZE ]
-	vmovdqa [ rdi +  0 * YWORD_SIZE ], ymm0
-	vmovdqa [ rdi +  1 * YWORD_SIZE ], ymm1
-	vmovdqa [ rdi +  2 * YWORD_SIZE ], ymm2
-	vmovdqa [ rdi +  3 * YWORD_SIZE ], ymm3
-	vmovdqa [ rdi +  4 * YWORD_SIZE ], ymm4
-	vmovdqa [ rdi +  5 * YWORD_SIZE ], ymm5
-	vmovdqa [ rdi +  6 * YWORD_SIZE ], ymm6
-	vmovdqa [ rdi +  7 * YWORD_SIZE ], ymm7
-	vmovdqa [ rdi +  8 * YWORD_SIZE ], ymm8
-	vmovdqa [ rdi +  9 * YWORD_SIZE ], ymm9
-	vmovdqa [ rdi + 10 * YWORD_SIZE ], ymm10
-	vmovdqa [ rdi + 11 * YWORD_SIZE ], ymm11
-	vmovdqa [ rdi + 12 * YWORD_SIZE ], ymm12
-	vmovdqa [ rdi + 13 * YWORD_SIZE ], ymm13
-	vmovdqa [ rdi + 14 * YWORD_SIZE ], ymm14
-	vmovdqa [ rdi + 15 * YWORD_SIZE ], ymm15
+	vmovdqu ymm0,  [ rsi + YWORD_SIZE *  0 ]
+	vmovdqu ymm1,  [ rsi + YWORD_SIZE *  1 ]
+	vmovdqu ymm2,  [ rsi + YWORD_SIZE *  2 ]
+	vmovdqu ymm3,  [ rsi + YWORD_SIZE *  3 ]
+	vmovdqu ymm4,  [ rsi + YWORD_SIZE *  4 ]
+	vmovdqu ymm5,  [ rsi + YWORD_SIZE *  5 ]
+	vmovdqu ymm6,  [ rsi + YWORD_SIZE *  6 ]
+	vmovdqu ymm7,  [ rsi + YWORD_SIZE *  7 ]
+	vmovdqu ymm8,  [ rsi + YWORD_SIZE *  8 ]
+	vmovdqu ymm9,  [ rsi + YWORD_SIZE *  9 ]
+	vmovdqu ymm10, [ rsi + YWORD_SIZE * 10 ]
+	vmovdqu ymm11, [ rsi + YWORD_SIZE * 11 ]
+	vmovdqu ymm12, [ rsi + YWORD_SIZE * 12 ]
+	vmovdqu ymm13, [ rsi + YWORD_SIZE * 13 ]
+	vmovdqu ymm14, [ rsi + YWORD_SIZE * 14 ]
+	vmovdqu ymm15, [ rsi + YWORD_SIZE * 15 ]
+	vmovdqa [ rdi + YWORD_SIZE *  0 ], ymm0
+	vmovdqa [ rdi + YWORD_SIZE *  1 ], ymm1
+	vmovdqa [ rdi + YWORD_SIZE *  2 ], ymm2
+	vmovdqa [ rdi + YWORD_SIZE *  3 ], ymm3
+	vmovdqa [ rdi + YWORD_SIZE *  4 ], ymm4
+	vmovdqa [ rdi + YWORD_SIZE *  5 ], ymm5
+	vmovdqa [ rdi + YWORD_SIZE *  6 ], ymm6
+	vmovdqa [ rdi + YWORD_SIZE *  7 ], ymm7
+	vmovdqa [ rdi + YWORD_SIZE *  8 ], ymm8
+	vmovdqa [ rdi + YWORD_SIZE *  9 ], ymm9
+	vmovdqa [ rdi + YWORD_SIZE * 10 ], ymm10
+	vmovdqa [ rdi + YWORD_SIZE * 11 ], ymm11
+	vmovdqa [ rdi + YWORD_SIZE * 12 ], ymm12
+	vmovdqa [ rdi + YWORD_SIZE * 13 ], ymm13
+	vmovdqa [ rdi + YWORD_SIZE * 14 ], ymm14
+	vmovdqa [ rdi + YWORD_SIZE * 15 ], ymm15
 	VZEROUPPER_RET
 
 section .rodata

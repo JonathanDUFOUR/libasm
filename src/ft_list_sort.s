@@ -21,12 +21,12 @@ section .text
 align 16
 ft_list_sort:
 
-%define OLD_RBX [ rsp + 0 * QWORD_SIZE ]
-%define OLD_R12 [ rsp + 1 * QWORD_SIZE ]
-%define OLD_R13 [ rsp + 2 * QWORD_SIZE ]
-%define OLD_R14 [ rsp + 3 * QWORD_SIZE ]
-%define LIST    [ rsp + 4 * QWORD_SIZE ]
-%define STACK_SIZE      5 * QWORD_SIZE
+%define OLD_RBX [ rsp + QWORD_SIZE * 0 ]
+%define OLD_R12 [ rsp + QWORD_SIZE * 1 ]
+%define OLD_R13 [ rsp + QWORD_SIZE * 2 ]
+%define OLD_R14 [ rsp + QWORD_SIZE * 3 ]
+%define LIST    [ rsp + QWORD_SIZE * 4 ]
+%define STACK_SIZE      QWORD_SIZE * 5
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE
@@ -112,10 +112,10 @@ align 16
 align 16
 merge_sort:
 
-%define LIST      [ rsp + 0 * QWORD_SIZE ]
-%define SUBLIST_A [ rsp + 1 * QWORD_SIZE ]
-%define SUBLIST_B [ rsp + 2 * QWORD_SIZE ]
-%define STACK_SIZE        3 * QWORD_SIZE
+%define LIST      [ rsp + QWORD_SIZE * 0 ]
+%define SUBLIST_A [ rsp + QWORD_SIZE * 1 ]
+%define SUBLIST_B [ rsp + QWORD_SIZE * 2 ]
+%define STACK_SIZE        QWORD_SIZE * 3
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE

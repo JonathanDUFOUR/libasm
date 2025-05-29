@@ -38,7 +38,7 @@ section .text
 align 16
 ft_atoi_base:
 
-%define DIGIT_ARRAY_SIZE 256 * BYTE_SIZE
+%define DIGIT_ARRAY_SIZE BYTE_SIZE * 256
 
 ; preserve the stack pointer and align it to its previous yword boundary
 	mov rdx, rsp
@@ -58,16 +58,16 @@ ft_atoi_base:
 ; TODO: handle the page crossing cases, to avoid page faults
 ; load 4 of the maximum 8 ywords of the base
 ; (a valid base can contain at most 247 characters, which always fit 8 ywords)
-	vmovdqu ymm1, [ rsi + 0 * YWORD_SIZE ]
-	vmovdqu ymm2, [ rsi + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ rsi + 4 * YWORD_SIZE ]
-	vmovdqu ymm4, [ rsi + 6 * YWORD_SIZE ]
+	vmovdqu ymm1, [ rsi + YWORD_SIZE * 0 ]
+	vmovdqu ymm2, [ rsi + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ rsi + YWORD_SIZE * 4 ]
+	vmovdqu ymm4, [ rsi + YWORD_SIZE * 6 ]
 ; merge the ywords into one that will contain their minimum byte values
 ; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5,  ymm1, [ rsi + 1 * YWORD_SIZE ]
-	vpminub ymm6,  ymm2, [ rsi + 3 * YWORD_SIZE ]
-	vpminub ymm7,  ymm3, [ rsi + 5 * YWORD_SIZE ]
-	vpminub ymm8,  ymm4, [ rsi + 7 * YWORD_SIZE ]
+	vpminub ymm5,  ymm1, [ rsi + YWORD_SIZE * 1 ]
+	vpminub ymm6,  ymm2, [ rsi + YWORD_SIZE * 3 ]
+	vpminub ymm7,  ymm3, [ rsi + YWORD_SIZE * 5 ]
+	vpminub ymm8,  ymm4, [ rsi + YWORD_SIZE * 7 ]
 	vpminub ymm9,  ymm5, ymm6
 	vpminub ymm10, ymm7, ymm8
 	vpminub ymm11, ymm9, ymm10
@@ -376,7 +376,7 @@ align 16
 	vpbroadcastb ymm0, [ rsi ]
 ; initialize the number of minus signs encountered
 	xor rsi, rsi
-; calculate how far the string pointer is to its previous yword boundary
+; calculate how far the string pointer is from its previous yword boundary
 	mov r9, rdi
 	and r9, YWORD_SIZE - 1
 ; align the string pointer to its previous yword boundary

@@ -20,9 +20,9 @@ section .text
 align 16
 ft_list_push_front:
 
-%define LIST [ rsp + 0 * QWORD_SIZE ]
-%define DATA [ rsp + 1 * QWORD_SIZE ]
-%define STACK_SIZE   2 * QWORD_SIZE
+%define LIST [ rsp + QWORD_SIZE * 0 ]
+%define DATA [ rsp + QWORD_SIZE * 1 ]
+%define STACK_SIZE   QWORD_SIZE * 2
 
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE

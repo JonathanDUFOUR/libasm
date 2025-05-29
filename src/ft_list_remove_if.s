@@ -24,13 +24,13 @@ section .text
 align 16
 ft_list_remove_if:
 
-%define OLD_RBX [ rsp + 0 * QWORD_SIZE ]
-%define OLD_RBP [ rsp + 1 * QWORD_SIZE ]
-%define OLD_R12 [ rsp + 2 * QWORD_SIZE ]
-%define OLD_R13 [ rsp + 3 * QWORD_SIZE ]
-%define OLD_R14 [ rsp + 4 * QWORD_SIZE ]
-%define OLD_R15 [ rsp + 5 * QWORD_SIZE ]
-%define STACK_SIZE      6 * QWORD_SIZE
+%define OLD_RBX [ rsp + QWORD_SIZE * 0 ]
+%define OLD_RBP [ rsp + QWORD_SIZE * 1 ]
+%define OLD_R12 [ rsp + QWORD_SIZE * 2 ]
+%define OLD_R13 [ rsp + QWORD_SIZE * 3 ]
+%define OLD_R14 [ rsp + QWORD_SIZE * 4 ]
+%define OLD_R15 [ rsp + QWORD_SIZE * 5 ]
+%define STACK_SIZE      QWORD_SIZE * 6
 
 ; check if the list is empty
 	cmp qword [ rdi ], NULL
