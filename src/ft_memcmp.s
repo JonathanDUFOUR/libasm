@@ -1,3 +1,7 @@
+;     Architecture: x86-64
+; Instruction sets: SSE, SSE2, SSSE3, SSE4.1, SSE4.2, AVX2, BMI1, BMI2
+;       Endianness: little-endian
+
 global ft_memcmp: function
 
 %use smartalign
@@ -14,19 +18,6 @@ ALIGNMODE p6
 %define  WORD_BITS  WORD_SIZE * 8
 %define DWORD_BITS DWORD_SIZE * 8
 
-%define    BIG_ENDIAN 0
-%define LITTLE_ENDIAN 1
-
-%ifndef BYTE_ORDER
-%define BYTE_ORDER LITTLE_ENDIAN
-%endif
-
-%if BYTE_ORDER == BIG_ENDIAN
-%define BIG_ENDIAN_MOV mov
-%else
-%define BIG_ENDIAN_MOV movbe
-%endif
-
 %macro VZEROUPPER_RET 0
 	vzeroupper
 	ret
@@ -35,7 +26,7 @@ ALIGNMODE p6
 ; Parameters
 ; %1: the address of the 1st yword array to compare.
 ; %2: the address of the 2nd yword array to compare.
-; %3: the number of ywords to compare. (assumed to either 1, 2, 4, or 8)
+; %3: the number of ywords to compare. (assumed to be either 1, 2, 4, or 8)
 ; %4: the label to jump to if there is a mismatch.
 %macro COMPARE_NEXT_N_YWORDS 4
 %define             S0 %1
@@ -43,34 +34,34 @@ ALIGNMODE p6
 %define    YWORD_COUNT %3
 %define MISMATCH_LABEL %4
 ; load the next yword(s) from S0
-	vmovdqu ymm0, [ S0 + 0 * YWORD_SIZE ]
+	vmovdqu ymm0, [ S0 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	vmovdqu ymm1, [ S0 + 1 * YWORD_SIZE ]
-%endif
+	vmovdqu ymm1, [ S0 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	vmovdqu ymm2, [ S0 + 2 * YWORD_SIZE ]
-	vmovdqu ymm3, [ S0 + 3 * YWORD_SIZE ]
-%endif
+	vmovdqu ymm2, [ S0 + YWORD_SIZE * 2 ]
+	vmovdqu ymm3, [ S0 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	vmovdqu ymm4, [ S0 + 4 * YWORD_SIZE ]
-	vmovdqu ymm5, [ S0 + 5 * YWORD_SIZE ]
-	vmovdqu ymm6, [ S0 + 6 * YWORD_SIZE ]
-	vmovdqu ymm7, [ S0 + 7 * YWORD_SIZE ]
+	vmovdqu ymm4, [ S0 + YWORD_SIZE * 4 ]
+	vmovdqu ymm5, [ S0 + YWORD_SIZE * 5 ]
+	vmovdqu ymm6, [ S0 + YWORD_SIZE * 6 ]
+	vmovdqu ymm7, [ S0 + YWORD_SIZE * 7 ]
+%endif
+%endif
 %endif
 ; compare them with the next yword(s) of S1
-	vpcmpeqb ymm0, ymm0, [ S1 + 0 * YWORD_SIZE ]
+	vpcmpeqb ymm0, ymm0, [ S1 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	vpcmpeqb ymm1, ymm1, [ S1 + 1 * YWORD_SIZE ]
-%endif
+	vpcmpeqb ymm1, ymm1, [ S1 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	vpcmpeqb ymm2, ymm2, [ S1 + 2 * YWORD_SIZE ]
-	vpcmpeqb ymm3, ymm3, [ S1 + 3 * YWORD_SIZE ]
-%endif
+	vpcmpeqb ymm2, ymm2, [ S1 + YWORD_SIZE * 2 ]
+	vpcmpeqb ymm3, ymm3, [ S1 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	vpcmpeqb ymm4, ymm4, [ S1 + 4 * YWORD_SIZE ]
-	vpcmpeqb ymm5, ymm5, [ S1 + 5 * YWORD_SIZE ]
-	vpcmpeqb ymm6, ymm6, [ S1 + 6 * YWORD_SIZE ]
-	vpcmpeqb ymm7, ymm7, [ S1 + 7 * YWORD_SIZE ]
+	vpcmpeqb ymm4, ymm4, [ S1 + YWORD_SIZE * 4 ]
+	vpcmpeqb ymm5, ymm5, [ S1 + YWORD_SIZE * 5 ]
+	vpcmpeqb ymm6, ymm6, [ S1 + YWORD_SIZE * 6 ]
+	vpcmpeqb ymm7, ymm7, [ S1 + YWORD_SIZE * 7 ]
+%endif
+%endif
 %endif
 ;                      ,-----ymm0  vpcmpeqb S0[0x00..=0x1F] S1[0x00..=0x1F]
 ;              ,----ymm8
@@ -89,20 +80,18 @@ ALIGNMODE p6
 ;                       '----ymm7  vpcmpeqb S0[0xE0..=0xFF] S1[0xE0..=0xFF]
 %if YWORD_COUNT > 1
 	vpand ymm8,  ymm0,  ymm1
-%endif
 %if YWORD_COUNT > 2
 	vpand ymm9,  ymm2,  ymm3
-%endif
 %if YWORD_COUNT > 4
 	vpand ymm10, ymm4,  ymm5
 	vpand ymm11, ymm6,  ymm7
 %endif
-%if YWORD_COUNT > 2
 	vpand ymm12, ymm8,  ymm9
-%endif
 %if YWORD_COUNT > 4
 	vpand ymm13, ymm10, ymm11
 	vpand ymm14, ymm12, ymm13
+%endif
+%endif
 %endif
 ; check if there is a mismatch
 %if YWORD_COUNT == 8
@@ -128,18 +117,18 @@ ALIGNMODE p6
 %macro USE_2x_N_YWORDS 1
 %define YWORD_COUNT %1
 %if   YWORD_COUNT == 8
-%define MISMATCH_LABEL diff.in_00_FF
+%define MISMATCH_LABEL mismatch.in_00_FF
 %elif YWORD_COUNT == 4
-%define MISMATCH_LABEL diff.in_00_7F
+%define MISMATCH_LABEL mismatch.in_00_7F
 %elif YWORD_COUNT == 2
-%define MISMATCH_LABEL diff.in_00_3F
+%define MISMATCH_LABEL mismatch.in_00_3F
 %elif YWORD_COUNT == 1
-%define MISMATCH_LABEL diff.in_00_1F
+%define MISMATCH_LABEL mismatch.in_00_1F
 %endif
 	COMPARE_NEXT_N_YWORDS rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
-; advance both pointers to their last %1 ywords
-	lea rdi, [ rdi + rdx - %1 * YWORD_SIZE ]
-	lea rsi, [ rsi + rdx - %1 * YWORD_SIZE ]
+; advance both S0 and S1 to their last YWORD_COUNT yword(s)
+	lea rdi, [ rdi + rdx - YWORD_SIZE * YWORD_COUNT ]
+	lea rsi, [ rsi + rdx - YWORD_SIZE * YWORD_COUNT ]
 	COMPARE_NEXT_N_YWORDS rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
 %if YWORD_COUNT != 1
 	xor eax, eax
@@ -154,17 +143,17 @@ ALIGNMODE p6
 	vpcmpeqb xmm15, xmm15, [ rsi ]
 	vpmovmskb eax, xmm15
 	inc ax
-	jnz diff.in_00_1F
+	jnz mismatch.in_00_1F
 %endmacro
 
 ; Parameters
-; %1: how far is the yword that contains the first mismatching byte.
+; %1: how far the yword that contains the first mismatching byte is from S0 and S1.
 ; %2: the register in which the comparison bitmask is.
 %macro RETURN_DIFF 2
 %define  OFFSET %1
 %define BITMASK %2
 ; calculate the index of the first mismatching byte
-	tzcnt r11, BITMASK
+	tzcnt r11d, BITMASK
 ; load the first mismatching byte from both S0 and S1
 	movzx eax, byte [ rdi + OFFSET + r11 ]
 	movzx ecx, byte [ rsi + OFFSET + r11 ]
@@ -181,43 +170,44 @@ section .text
 ; rsi: S1: the address of the 2nd memory area to compare. (assumed to be a valid address)
 ; rdx:  N: the number of bytes to compare.
 ;
-; Return:
+; Return
 ; eax:
-; - zero if the first N bytes of s0 match the first N bytes of s1.
+; - zero if the first N bytes of S0 match the first N bytes of S1.
 ; - a negative value if the first mismatching byte among the first N bytes of S0
 ;   is less than the first one among the first N bytes of S1.
 ; - a positive value if the first mismatching byte among the N first bytes of S0
 ;   is greater than the first one among the first N bytes of S1.
 align 16
 ft_memcmp:
-	cmp rdx, 16 * YWORD_SIZE
+	cmp rdx, YWORD_SIZE * 16
 	ja .compare_more_than_16_ywords
-	cmp dx, 8 * YWORD_SIZE
+	cmp dx, YWORD_SIZE * 8
 	ja .use_2x_8_ywords
-	cmp dl, 4 * YWORD_SIZE
+	cmp dl, YWORD_SIZE * 4
 	ja .use_2x_4_ywords
-	cmp dl, 2 * YWORD_SIZE
+	cmp dl, YWORD_SIZE * 2
 	ja .use_2x_2_ywords
-	cmp dl, 1 * YWORD_SIZE
+	cmp dl, YWORD_SIZE * 1
 	ja .use_2x_1_yword
-	cmp dl, OWORD_SIZE
+	cmp dl, OWORD_SIZE * 1
 	ja .use_2x_1_oword
-	cmp dl, QWORD_SIZE
+	cmp dl, QWORD_SIZE * 1
 	ja .use_2x_1_qword
-	cmp dl, DWORD_SIZE
+	cmp dl, DWORD_SIZE * 1
 	ja .use_2x_1_dword
-	cmp dl, WORD_SIZE
+	cmp dl, WORD_SIZE * 1
 	ja .use_2x_1_word
-	cmp dl, BYTE_SIZE
-	jae .use_2x_1_byte
+	cmp dl, BYTE_SIZE * 1
+	ja .use_2x_1_byte
+	je .use_1x_1_byte
 	xor eax, eax
 	ret
 
 align 16
 .compare_more_than_16_ywords:
-	COMPARE_NEXT_N_YWORDS rdi, rsi, 1, diff.in_00_FF
+	COMPARE_NEXT_N_YWORDS rdi, rsi, 1, mismatch.in_00_FF
 ; set rdx to the last 8 ywords of S1
-	lea rdx, [ rsi + rdx - 8 * YWORD_SIZE ]
+	lea rdx, [ rsi + rdx - YWORD_SIZE * 8 ]
 ; calculate the offset between S0 and S1
 	sub rdi, rsi
 ; align S1 to its next yword boundary
@@ -225,16 +215,16 @@ align 16
 	and rsi, -YWORD_SIZE
 align 16
 .compare_next_8_ywords:
-	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, diff
+	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, mismatch
 ; advance S1 to its next 8 ywords
-	add rsi, 8 * YWORD_SIZE
+	add rsi, YWORD_SIZE * 8
 ; check if S1 reached its last 8 ywords
 	cmp rsi, rdx
 ; repeat until either there is mismatch or S1 reaches its last 8 ywords
 	jb .compare_next_8_ywords
 ; set rsi to the last 8 ywords of S1
 	mov rsi, rdx
-	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, diff
+	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, mismatch
 	VZEROUPPER_RET
 
 align 16
@@ -265,44 +255,44 @@ align 16
 align 16
 .use_2x_1_qword:
 ; load the first qword from both S0 and S1
-	BIG_ENDIAN_MOV rax, [ rdi ]
-	BIG_ENDIAN_MOV rcx, [ rsi ]
+	movbe rax, [ rdi ]
+	movbe rcx, [ rsi ]
 ; calculate the difference between the two qwords if any
 	sub rax, rcx
-	jnz diff.in_rax
+	jnz mismatch.in_rax
 ; load the last qword from both S0 and S1
-	BIG_ENDIAN_MOV rax, [ rdi + rdx - QWORD_SIZE ]
-	BIG_ENDIAN_MOV rcx, [ rsi + rdx - QWORD_SIZE ]
+	movbe rax, [ rdi + rdx - QWORD_SIZE ]
+	movbe rcx, [ rsi + rdx - QWORD_SIZE ]
 ; calculate the difference between the two qwords if any
 	sub rax, rcx
-	jnz diff.in_rax
+	jnz mismatch.in_rax
 	ret
 
 align 16
 .use_2x_1_dword:
 ; load the first and last dwords from both S0 and S1
-	BIG_ENDIAN_MOV eax, [ rdi ]
-	BIG_ENDIAN_MOV ecx, [ rsi ]
-	BIG_ENDIAN_MOV r8d, [ rdi + rdx - DWORD_SIZE ]
-	BIG_ENDIAN_MOV r9d, [ rsi + rdx - DWORD_SIZE ]
-; merge each pair of dwords into a single qword
+	movbe eax, [ rdi ]
+	movbe ecx, [ rsi ]
+	movbe r8d, [ rdi + rdx - DWORD_SIZE ]
+	movbe r9d, [ rsi + rdx - DWORD_SIZE ]
+; concatenate each pair of dwords into a single qword
 	shl rax, DWORD_BITS
 	shl rcx, DWORD_BITS
 	or eax, r8d
 	or ecx, r9d
 ; calculate the difference between the two qwords if any
 	sub rax, rcx
-	jnz diff.in_rax
+	jnz mismatch.in_rax
 	ret
 
 align 16
 .use_2x_1_word:
 ; load the first and last words from both S0 and S1
-	BIG_ENDIAN_MOV ax, [ rdi ]
-	BIG_ENDIAN_MOV cx, [ rsi ]
-	BIG_ENDIAN_MOV r8w, [ rdi + rdx - WORD_SIZE ]
-	BIG_ENDIAN_MOV r9w, [ rsi + rdx - WORD_SIZE ]
-; merge each pair of words into a single dword
+	movbe ax, [ rdi ]
+	movbe cx, [ rsi ]
+	movbe r8w, [ rdi + rdx - WORD_SIZE ]
+	movbe r9w, [ rsi + rdx - WORD_SIZE ]
+; concatenate each pair of words into a single dword
 	shl eax, WORD_BITS
 	shl ecx, WORD_BITS
 	mov ax, r8w
@@ -318,9 +308,9 @@ align 16
 	movzx ecx, byte [ rsi ]
 	mov r8b, [ rdi + rdx - BYTE_SIZE ]
 	mov r9b, [ rsi + rdx - BYTE_SIZE ]
-; merge each pair of bytes into a single word
-	shl eax, BYTE_BITS
-	shl ecx, BYTE_BITS
+; concatenate each pair of bytes into a single word
+	shl ax, BYTE_BITS
+	shl cx, BYTE_BITS
 	mov al, r8b
 	mov cl, r9b
 ; calculate the difference between the two bytes if any
@@ -328,7 +318,16 @@ align 16
 	ret
 
 align 16
-diff:
+.use_1x_1_byte:
+; load the first byte from S0
+	movzx eax, byte [ rdi ]
+	movzx ecx, byte [ rsi ]
+; calculate the difference between the two bytes if any
+	sub eax, ecx
+	ret
+
+align 16
+mismatch:
 ; restore the S0 pointer
 	add rdi, rsi
 align 16
@@ -345,7 +344,7 @@ align 16
 	inc eax
 	jnz .in_C0_DF
 ;in_E0_FF:
-	RETURN_DIFF 0xE0, r8
+	RETURN_DIFF 0xE0, r8d
 
 align 16
 .in_00_7F:
@@ -357,7 +356,7 @@ align 16
 	inc eax
 	jnz .in_40_5F
 ;in_60_7F:
-	RETURN_DIFF 0x60, r9
+	RETURN_DIFF 0x60, r9d
 
 align 16
 .in_00_3F:
@@ -365,15 +364,15 @@ align 16
 	inc eax
 	jnz .in_00_1F
 ;in_20_3F:
-	RETURN_DIFF 0x20, r10
+	RETURN_DIFF 0x20, r10d
 
 align 16
 .in_00_1F:
-	RETURN_DIFF 0x00, rax
+	RETURN_DIFF 0x00, eax
 
 align 16
 .in_40_5F:
-	RETURN_DIFF 0x40, rax
+	RETURN_DIFF 0x40, eax
 
 align 16
 .in_80_BF:
@@ -381,15 +380,15 @@ align 16
 	inc eax
 	jnz .in_80_9F
 ;in_A0_BF:
-	RETURN_DIFF 0xA0, r10
+	RETURN_DIFF 0xA0, r10d
 
 align 16
 .in_80_9F:
-	RETURN_DIFF 0x80, rax
+	RETURN_DIFF 0x80, eax
 
 align 16
 .in_C0_DF:
-	RETURN_DIFF 0xC0, rax
+	RETURN_DIFF 0xC0, eax
 
 align 16
 .in_rax:
