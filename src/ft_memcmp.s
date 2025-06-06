@@ -143,6 +143,7 @@ ALIGNMODE p6
 	vmovdqu xmm15, [ rdi ]
 ; compare it with the next oword of S1
 	vpcmpeqb xmm15, xmm15, [ rsi ]
+; check if there is a mismatch
 	vpmovmskb eax, xmm15
 	inc ax
 	jnz mismatch.in_00_1F
@@ -256,7 +257,7 @@ align 16
 
 align 16
 .use_2x_1_qword:
-; load the first qword from both S0 and S1
+; load the first qword from both S0 and S1 in big-endian
 	movbe rax, [ rdi ]
 	movbe rcx, [ rsi ]
 ; calculate the difference between the two qwords if any
@@ -272,7 +273,7 @@ align 16
 
 align 16
 .use_2x_1_dword:
-; load the first and last dwords from both S0 and S1
+; load the first and last dwords from both S0 and S1 in big-endian
 	movbe eax, [ rdi ]
 	movbe ecx, [ rsi ]
 	movbe r8d, [ rdi + rdx - DWORD_SIZE ]
@@ -289,7 +290,7 @@ align 16
 
 align 16
 .use_2x_1_word:
-; load the first and last words from both S0 and S1
+; load the first and last words from both S0 and S1 in big-endian
 	movbe ax, [ rdi ]
 	movbe cx, [ rsi ]
 	movbe r8w, [ rdi + rdx - WORD_SIZE ]
