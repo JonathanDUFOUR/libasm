@@ -24,27 +24,29 @@ ALIGNMODE p6
 %endmacro
 
 ; Parameters
-; %1: the address of the 1st yword array to compare.
-; %2: the address of the 2nd yword array to compare.
-; %3: the number of ywords to compare. (assumed to be either 1, 2, 4, or 8)
-; %4: the label to jump to if there is a mismatch.
-%macro COMPARE_NEXT_N_YWORDS 4
-%define             S0 %1
-%define             S1 %2
-%define    YWORD_COUNT %3
-%define MISMATCH_LABEL %4
+; %1: the instruction to use to load the yword(s). (assumed to be either vmovdqa or vmovdqu)
+; %2: the address of the 1st yword array to compare.
+; %3: the address of the 2nd yword array to compare.
+; %4: the number of ywords to compare. (assumed to be either 1, 2, 4, or 8)
+; %5: the label to jump to if there is a mismatch.
+%macro COMPARE_NEXT_N_YWORDS 5
+%define           VMOV %1
+%define             S0 %2
+%define             S1 %3
+%define    YWORD_COUNT %4
+%define MISMATCH_LABEL %5
 ; load the next yword(s) from S0
-	vmovdqu ymm0, [ S0 + YWORD_SIZE * 0 ]
+	VMOV ymm0, [ S0 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	vmovdqu ymm1, [ S0 + YWORD_SIZE * 1 ]
+	VMOV ymm1, [ S0 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	vmovdqu ymm2, [ S0 + YWORD_SIZE * 2 ]
-	vmovdqu ymm3, [ S0 + YWORD_SIZE * 3 ]
+	VMOV ymm2, [ S0 + YWORD_SIZE * 2 ]
+	VMOV ymm3, [ S0 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	vmovdqu ymm4, [ S0 + YWORD_SIZE * 4 ]
-	vmovdqu ymm5, [ S0 + YWORD_SIZE * 5 ]
-	vmovdqu ymm6, [ S0 + YWORD_SIZE * 6 ]
-	vmovdqu ymm7, [ S0 + YWORD_SIZE * 7 ]
+	VMOV ymm4, [ S0 + YWORD_SIZE * 4 ]
+	VMOV ymm5, [ S0 + YWORD_SIZE * 5 ]
+	VMOV ymm6, [ S0 + YWORD_SIZE * 6 ]
+	VMOV ymm7, [ S0 + YWORD_SIZE * 7 ]
 %endif
 %endif
 %endif
@@ -125,11 +127,11 @@ ALIGNMODE p6
 %elif YWORD_COUNT == 1
 %define MISMATCH_LABEL mismatch.in_00_1F
 %endif
-	COMPARE_NEXT_N_YWORDS rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
+	COMPARE_NEXT_N_YWORDS vmovdqu, rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
 ; advance both S0 and S1 to their last YWORD_COUNT yword(s)
 	lea rdi, [ rdi + rdx - YWORD_SIZE * YWORD_COUNT ]
 	lea rsi, [ rsi + rdx - YWORD_SIZE * YWORD_COUNT ]
-	COMPARE_NEXT_N_YWORDS rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
+	COMPARE_NEXT_N_YWORDS vmovdqu, rdi, rsi, YWORD_COUNT, MISMATCH_LABEL
 %if YWORD_COUNT != 1
 	xor eax, eax
 %endif
@@ -205,26 +207,26 @@ ft_memcmp:
 
 align 16
 .compare_more_than_16_ywords:
-	COMPARE_NEXT_N_YWORDS rdi, rsi, 1, mismatch.in_00_FF
-; set rdx to the last 8 ywords of S1
-	lea rdx, [ rsi + rdx - YWORD_SIZE * 8 ]
+	COMPARE_NEXT_N_YWORDS vmovdqu, rdi, rsi, 1, mismatch.in_00_FF
+; set rdx to the last 8 ywords of S0
+	lea rdx, [ rdi + rdx - YWORD_SIZE * 8 ]
 ; calculate the offset between S0 and S1
-	sub rdi, rsi
-; align S1 to its next yword boundary
-	add rsi,  YWORD_SIZE
-	and rsi, -YWORD_SIZE
+	sub rsi, rdi
+; align S0 to its next yword boundary
+	and rdi, -YWORD_SIZE
+	add rdi,  YWORD_SIZE
 align 16
 .compare_next_8_ywords:
-	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, mismatch
-; advance S1 to its next 8 ywords
-	add rsi, YWORD_SIZE * 8
-; check if S1 reached its last 8 ywords
-	cmp rsi, rdx
-; repeat until either there is mismatch or S1 reaches its last 8 ywords
+	COMPARE_NEXT_N_YWORDS vmovdqa, rdi, rdi + rsi, 8, mismatch
+; advance S0 to its next 8 ywords
+	add rdi, YWORD_SIZE * 8
+; check if S0 reached its last 8 ywords
+	cmp rdi, rdx
+; repeat until either there is mismatch or S0 reaches its last 8 ywords
 	jb .compare_next_8_ywords
-; set rsi to the last 8 ywords of S1
-	mov rsi, rdx
-	COMPARE_NEXT_N_YWORDS rsi + rdi, rsi, 8, mismatch
+; set S0 to its last 8 ywords
+	mov rdi, rdx
+	COMPARE_NEXT_N_YWORDS vmovdqu, rdi, rdi + rsi, 8, mismatch
 	VZEROUPPER_RET
 
 align 16
@@ -328,8 +330,8 @@ align 16
 
 align 16
 mismatch:
-; restore the S0 pointer
-	add rdi, rsi
+; restore the S1 pointer
+	add rsi, rdi
 align 16
 .in_00_FF:
 	vpmovmskb r9d, ymm12
