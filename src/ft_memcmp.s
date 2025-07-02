@@ -1,6 +1,6 @@
 ; Architecture: x86-64
 ; Endianness: little-endian
-; CPUID feature flags: AVX2, BMI1, MOVBE
+; CPUID feature flags: AVX2, MOVBE
 
 global ft_memcmp: function
 
