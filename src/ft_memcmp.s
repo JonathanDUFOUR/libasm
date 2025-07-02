@@ -18,10 +18,30 @@ ALIGNMODE p6
 %define  WORD_BITS  WORD_SIZE * 8
 %define DWORD_BITS DWORD_SIZE * 8
 
-%macro VZEROUPPER_RET 0
-	vzeroupper
-	ret
-%endmacro
+%define MASK_00_1F ymm8
+%define MASK_20_3F ymm9
+%define MASK_40_5F ymm10
+%define MASK_60_7F ymm11
+%define MASK_80_9F ymm12
+%define MASK_A0_BF ymm13
+%define MASK_C0_DF ymm14
+%define MASK_E0_FF ymm15
+%define MASK_00_3F ymm0
+%define MASK_40_7F ymm1
+%define MASK_80_BF ymm2
+%define MASK_C0_FF ymm3
+%define MASK_00_7F ymm4
+%define MASK_80_FF ymm5
+%define MASK_00_FF ymm6
+
+%define GPR_00_FF r8d
+%define GPR_00_7F r9d
+%define GPR_00_3F r10d
+%define GPR_80_BF r10d
+%define GPR_00_1F eax
+%define GPR_40_5F eax
+%define GPR_80_9F eax
+%define GPR_C0_DF eax
 
 ; Parameters
 ; %1: the instruction to use to load the yword(s). (assumed to be either vmovdqa or vmovdqu)
@@ -35,7 +55,37 @@ ALIGNMODE p6
 %define             S1 %3
 %define    YWORD_COUNT %4
 %define MISMATCH_LABEL %5
-; load the next yword(s) from S0
+;                                                ┌──ymm0──(S0+YWORD_SIZE×0)[..YWORD_SIZE]
+;                               ┌──ymm8───VPCMPEQB
+;                               │                └────────(S1+YWORD_SIZE×0)[..YWORD_SIZE]
+;                    ┌──ymm0──AND
+;                    │          │                ┌──ymm1──(S0+YWORD_SIZE×1)[..YWORD_SIZE]
+;                    │          └──ymm9───VPCMPEQB
+;                    │                           └────────(S1+YWORD_SIZE×1)[..YWORD_SIZE]
+;         ┌──ymm4──AND
+;         │          │                           ┌──ymm2──(S0+YWORD_SIZE×2)[..YWORD_SIZE]
+;         │          │          ┌──ymm10──VPCMPEQB
+;         │          │          │                └────────(S1+YWORD_SIZE×2)[..YWORD_SIZE]
+;         │          └──ymm1──AND
+;         │                     │                ┌──ymm3──(S0+YWORD_SIZE×3)[..YWORD_SIZE]
+;         │                     └──ymm11──VPCMPEQB
+;         │                                      └────────(S1+YWORD_SIZE×3)[..YWORD_SIZE]
+; ymm6──AND
+;         │                                      ┌──ymm4──(S0+YWORD_SIZE×4)[..YWORD_SIZE]
+;         │                     ┌──ymm12──VPCMPEQB
+;         │                     │                └────────(S1+YWORD_SIZE×4)[..YWORD_SIZE]
+;         │          ┌──ymm2──AND
+;         │          │          │                ┌──ymm5──(S0+YWORD_SIZE×5)[..YWORD_SIZE]
+;         │          │          └──ymm13──VPCMPEQB
+;         │          │                           └────────(S1+YWORD_SIZE×5)[..YWORD_SIZE]
+;         └──ymm5──AND
+;                    │                           ┌──ymm6──(S0+YWORD_SIZE×6)[..YWORD_SIZE]
+;                    │          ┌──ymm14──VPCMPEQB
+;                    │          │                └────────(S1+YWORD_SIZE×6)[..YWORD_SIZE]
+;                    └──ymm3──AND
+;                               │                ┌──ymm7──(S0+YWORD_SIZE×7)[..YWORD_SIZE]
+;                               └──ymm15──VPCMPEQB
+;                                                └────────(S1+YWORD_SIZE×7)[..YWORD_SIZE]
 	VMOVDQ ymm0, [ S0 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
 	VMOVDQ ymm1, [ S0 + YWORD_SIZE * 1 ]
@@ -50,67 +100,51 @@ ALIGNMODE p6
 %endif
 %endif
 %endif
-; compare them with the next yword(s) of S1
-	vpcmpeqb ymm0, ymm0, [ S1 + YWORD_SIZE * 0 ]
+	vpcmpeqb MASK_00_1F, ymm0, [ S1 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	vpcmpeqb ymm1, ymm1, [ S1 + YWORD_SIZE * 1 ]
+	vpcmpeqb MASK_20_3F, ymm1, [ S1 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	vpcmpeqb ymm2, ymm2, [ S1 + YWORD_SIZE * 2 ]
-	vpcmpeqb ymm3, ymm3, [ S1 + YWORD_SIZE * 3 ]
+	vpcmpeqb MASK_40_5F, ymm2, [ S1 + YWORD_SIZE * 2 ]
+	vpcmpeqb MASK_60_7F, ymm3, [ S1 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	vpcmpeqb ymm4, ymm4, [ S1 + YWORD_SIZE * 4 ]
-	vpcmpeqb ymm5, ymm5, [ S1 + YWORD_SIZE * 5 ]
-	vpcmpeqb ymm6, ymm6, [ S1 + YWORD_SIZE * 6 ]
-	vpcmpeqb ymm7, ymm7, [ S1 + YWORD_SIZE * 7 ]
+	vpcmpeqb MASK_80_9F, ymm4, [ S1 + YWORD_SIZE * 4 ]
+	vpcmpeqb MASK_A0_BF, ymm5, [ S1 + YWORD_SIZE * 5 ]
+	vpcmpeqb MASK_C0_DF, ymm6, [ S1 + YWORD_SIZE * 6 ]
+	vpcmpeqb MASK_E0_FF, ymm7, [ S1 + YWORD_SIZE * 7 ]
 %endif
 %endif
 %endif
-;                      ,-----ymm0  vpcmpeqb S0[0x00..=0x1F] S1[0x00..=0x1F]
-;              ,----ymm8
-;              |       '-----ymm1  vpcmpeqb S0[0x20..=0x3F] S1[0x20..=0x3F]
-;     ,----ymm12
-;     |        |       ,-----ymm2  vpcmpeqb S0[0x40..=0x5F] S1[0x40..=0x5F]
-;     |        '----ymm9
-;     |                '-----ymm3  vpcmpeqb S0[0x60..=0x7F] S1[0x60..=0x7F]
-; ymm14
-;     |                 ,----ymm4  vpcmpeqb S0[0x80..=0x9F] S1[0x80..=0x9F]
-;     |        ,----ymm10
-;     |        |        '----ymm5  vpcmpeqb S0[0xA0..=0xBF] S1[0xA0..=0xBF]
-;     '----ymm13
-;              |        ,----ymm6  vpcmpeqb S0[0xC0..=0xDF] S1[0xC0..=0xDF]
-;              '----ymm11
-;                       '----ymm7  vpcmpeqb S0[0xE0..=0xFF] S1[0xE0..=0xFF]
 %if YWORD_COUNT > 1
-	vpand ymm8,  ymm0,  ymm1
+	vpand MASK_00_3F, MASK_00_1F, MASK_20_3F
 %if YWORD_COUNT > 2
-	vpand ymm9,  ymm2,  ymm3
+	vpand MASK_40_7F, MASK_40_5F, MASK_60_7F
 %if YWORD_COUNT > 4
-	vpand ymm10, ymm4,  ymm5
-	vpand ymm11, ymm6,  ymm7
+	vpand MASK_80_BF, MASK_80_9F, MASK_A0_BF
+	vpand MASK_C0_FF, MASK_C0_DF, MASK_E0_FF
 %endif
-	vpand ymm12, ymm8,  ymm9
+	vpand MASK_00_7F, MASK_00_3F, MASK_40_7F
 %if YWORD_COUNT > 4
-	vpand ymm13, ymm10, ymm11
-	vpand ymm14, ymm12, ymm13
+	vpand MASK_80_FF, MASK_80_BF, MASK_C0_FF
+	vpand MASK_00_FF, MASK_00_7F, MASK_80_FF
 %endif
 %endif
 %endif
 ; check if there is a mismatch
 %if YWORD_COUNT == 8
-%define REG r8d
-%define YMM ymm14
+%define  GPR  GPR_00_FF
+%define MASK MASK_00_FF
 %elif YWORD_COUNT == 4
-%define REG r9d
-%define YMM ymm12
+%define  GPR  GPR_00_7F
+%define MASK MASK_00_7F
 %elif YWORD_COUNT == 2
-%define REG r10d
-%define YMM ymm8
+%define  GPR  GPR_00_3F
+%define MASK MASK_00_3F
 %elif YWORD_COUNT == 1
-%define REG eax
-%define YMM ymm0
+%define  GPR  GPR_00_1F
+%define MASK MASK_00_1F
 %endif
-	vpmovmskb REG, YMM
-	inc REG
+	vpmovmskb GPR, MASK
+	inc GPR
 	jnz MISMATCH_LABEL
 %endmacro
 
@@ -135,16 +169,18 @@ ALIGNMODE p6
 %if YWORD_COUNT != 1
 	xor eax, eax
 %endif
-	VZEROUPPER_RET
+; clear the upper bits of the YMM registers to avoid performance penalties
+	vzeroupper
+	ret
 %endmacro
 
 %macro COMPARE_NEXT_OWORD 0
 ; load the next oword from S0
-	vmovdqu xmm15, [ rdi ]
+	vmovdqu xmm0, [ rdi ]
 ; compare it with the next oword of S1
-	vpcmpeqb xmm15, xmm15, [ rsi ]
+	vpcmpeqb xmm1, xmm0, [ rsi ]
 ; check if there is a mismatch
-	vpmovmskb eax, xmm15
+	vpmovmskb eax, xmm1
 	inc ax
 	jnz mismatch.in_00_1F
 %endmacro
@@ -156,13 +192,15 @@ ALIGNMODE p6
 %define  OFFSET %1
 %define BITMASK %2
 ; calculate the index of the first mismatching byte
-	tzcnt r11d, BITMASK
+	bsf r11d, BITMASK
 ; load the first mismatching byte from both S0 and S1
 	movzx eax, byte [ rdi + OFFSET + r11 ]
 	movzx ecx, byte [ rsi + OFFSET + r11 ]
 ; return the difference between the two bytes
 	sub eax, ecx
-	VZEROUPPER_RET
+; clear the upper bits of the YMM registers to avoid performance penalties
+	vzeroupper
+	ret
 %endmacro
 
 section .text
@@ -184,23 +222,23 @@ align 16
 ft_memcmp:
 	cmp rdx, YWORD_SIZE * 16
 	ja .compare_more_than_16_ywords
-	cmp dx, YWORD_SIZE * 8
+	cmp edx, YWORD_SIZE * 8
 	ja .use_2x_8_ywords
-	cmp dl, YWORD_SIZE * 4
+	cmp edx, YWORD_SIZE * 4
 	ja .use_2x_4_ywords
-	cmp dl, YWORD_SIZE * 2
+	cmp edx, YWORD_SIZE * 2
 	ja .use_2x_2_ywords
-	cmp dl, YWORD_SIZE * 1
+	cmp edx, YWORD_SIZE * 1
 	ja .use_2x_1_yword
-	cmp dl, OWORD_SIZE * 1
+	cmp edx, OWORD_SIZE * 1
 	ja .use_2x_1_oword
-	cmp dl, QWORD_SIZE * 1
+	cmp edx, QWORD_SIZE * 1
 	ja .use_2x_1_qword
-	cmp dl, DWORD_SIZE * 1
+	cmp edx, DWORD_SIZE * 1
 	ja .use_2x_1_dword
-	cmp dl, WORD_SIZE * 1
+	cmp edx, WORD_SIZE * 1
 	ja .use_2x_1_word
-	cmp dl, BYTE_SIZE * 1
+	cmp edx, BYTE_SIZE * 1
 	ja .use_2x_1_byte
 	je .use_1x_1_byte
 	xor eax, eax
@@ -228,7 +266,9 @@ align 16
 ; set S0 to its last 8 ywords
 	mov rdi, rdx
 	COMPARE_NEXT_N_YWORDS vmovdqu, rdi, rdi + rsi, 8, mismatch
-	VZEROUPPER_RET
+; clear the upper bits of the YMM registers to avoid performance penalties
+	vzeroupper
+	ret
 
 align 16
 .use_2x_8_ywords:
@@ -335,63 +375,63 @@ mismatch:
 	add rsi, rdi
 align 16
 .in_00_FF:
-	vpmovmskb r9d, ymm12
-	inc r9d
+	vpmovmskb GPR_00_7F, MASK_00_7F
+	inc GPR_00_7F
 	jnz .in_00_7F
 ;in_80_FF:
-	vpmovmskb r10d, ymm10
-	inc r10d
+	vpmovmskb GPR_80_BF, MASK_80_BF
+	inc GPR_80_BF
 	jnz .in_80_BF
 ;in_C0_FF:
-	vpmovmskb eax, ymm6
-	inc eax
+	vpmovmskb GPR_C0_DF, MASK_C0_DF
+	inc GPR_C0_DF
 	jnz .in_C0_DF
 ;in_E0_FF:
-	RETURN_DIFF 0xE0, r8d
+	RETURN_DIFF 0xE0, GPR_00_FF
 
 align 16
 .in_00_7F:
-	vpmovmskb r10d, ymm8
-	inc r10d
+	vpmovmskb GPR_00_3F, MASK_00_3F
+	inc GPR_00_3F
 	jnz .in_00_3F
 ;in_40_7F:
-	vpmovmskb eax, ymm2
-	inc eax
+	vpmovmskb GPR_40_5F, MASK_40_5F
+	inc GPR_40_5F
 	jnz .in_40_5F
 ;in_60_7F:
-	RETURN_DIFF 0x60, r9d
+	RETURN_DIFF 0x60, GPR_00_7F
 
 align 16
 .in_00_3F:
-	vpmovmskb eax, ymm0
-	inc eax
+	vpmovmskb GPR_00_1F, MASK_00_1F
+	inc GPR_00_1F
 	jnz .in_00_1F
 ;in_20_3F:
-	RETURN_DIFF 0x20, r10d
+	RETURN_DIFF 0x20, GPR_00_3F
 
 align 16
 .in_00_1F:
-	RETURN_DIFF 0x00, eax
+	RETURN_DIFF 0x00, GPR_00_1F
 
 align 16
 .in_40_5F:
-	RETURN_DIFF 0x40, eax
+	RETURN_DIFF 0x40, GPR_40_5F
 
 align 16
 .in_80_BF:
-	vpmovmskb eax, ymm4
-	inc eax
+	vpmovmskb GPR_80_9F, MASK_80_9F
+	inc GPR_80_9F
 	jnz .in_80_9F
 ;in_A0_BF:
-	RETURN_DIFF 0xA0, r10d
+	RETURN_DIFF 0xA0, GPR_80_BF
 
 align 16
 .in_80_9F:
-	RETURN_DIFF 0x80, eax
+	RETURN_DIFF 0x80, GPR_80_9F
 
 align 16
 .in_C0_DF:
-	RETURN_DIFF 0xC0, eax
+	RETURN_DIFF 0xC0, GPR_C0_DF
 
 align 16
 .in_rax:
