@@ -9,6 +9,9 @@ ALIGNMODE p6
 
 %define YWORD_SIZE 32
 
+; TODO: rearrange the position of the macro definitions
+; TOOD: for each macro with parameters, name the parameters
+
 ; Parameters
 ; %1: the label to jump to if the given YMM register contains a null byte.
 ; %2: the yword to check (may be a YMM register or an address).
@@ -49,7 +52,7 @@ ft_strlen:
 ; preliminary initialization
 	mov rax, rdi
 	vpxor ymm0, ymm0, ymm0
-; align the pointer to the previous yword boundary
+; align S to its previous yword boundary
 	and rax, -YWORD_SIZE
 ; check if the 1st yword contains a null byte
 	vpcmpeqb ymm12, ymm0, [ rax ]
@@ -59,19 +62,19 @@ ft_strlen:
 ; calculate the index of the 1st null byte in the 1st yword if any
 	bsf edx, edx
 	jnz .small_length
-; update the pointer to the next yword boundary
+; update S to the next yword boundary
 	add rax, YWORD_SIZE
-;is_pointer_aligned_to_2_ywords_boundary:
+;align_S_to_next_2_ywords_boundary:
 	test rax, YWORD_SIZE
-	jz .is_pointer_aligned_to_4_ywords_boundary
+	jz .align_S_to_next_4_ywords_boundary
 ; check if the next yword contains a null byte
 	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, [ rax ]
 ; update the pointer to the next 2-ywords boundary
 	add rax, YWORD_SIZE
 align 16
-.is_pointer_aligned_to_4_ywords_boundary:
+.align_S_to_next_4_ywords_boundary:
 	test rax, YWORD_SIZE * 2
-	jz .is_pointer_aligned_to_8_ywords_boundary
+	jz .align_S_to_next_8_ywords_boundary
 ; load 1 of the next 2 ywords from the string
 	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
 ; merge the 2 ywords into 1 yword that will contain their minimum byte values
@@ -84,7 +87,7 @@ align 16
 ; update the pointer to the next 4-ywords boundary
 	add rax, YWORD_SIZE * 2
 align 16
-.is_pointer_aligned_to_8_ywords_boundary:
+.align_S_to_next_8_ywords_boundary:
 	test rax, YWORD_SIZE * 4
 	jz .check_next_8_ywords
 ; load 2 of the next 4 ywords from the string
