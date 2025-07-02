@@ -30,23 +30,23 @@ ALIGNMODE p6
 ; %4: the number of ywords to compare. (assumed to be either 1, 2, 4, or 8)
 ; %5: the label to jump to if there is a mismatch.
 %macro COMPARE_NEXT_N_YWORDS 5
-%define           VMOV %1
+%define         VMOVDQ %1
 %define             S0 %2
 %define             S1 %3
 %define    YWORD_COUNT %4
 %define MISMATCH_LABEL %5
 ; load the next yword(s) from S0
-	VMOV ymm0, [ S0 + YWORD_SIZE * 0 ]
+	VMOVDQ ymm0, [ S0 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	VMOV ymm1, [ S0 + YWORD_SIZE * 1 ]
+	VMOVDQ ymm1, [ S0 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	VMOV ymm2, [ S0 + YWORD_SIZE * 2 ]
-	VMOV ymm3, [ S0 + YWORD_SIZE * 3 ]
+	VMOVDQ ymm2, [ S0 + YWORD_SIZE * 2 ]
+	VMOVDQ ymm3, [ S0 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	VMOV ymm4, [ S0 + YWORD_SIZE * 4 ]
-	VMOV ymm5, [ S0 + YWORD_SIZE * 5 ]
-	VMOV ymm6, [ S0 + YWORD_SIZE * 6 ]
-	VMOV ymm7, [ S0 + YWORD_SIZE * 7 ]
+	VMOVDQ ymm4, [ S0 + YWORD_SIZE * 4 ]
+	VMOVDQ ymm5, [ S0 + YWORD_SIZE * 5 ]
+	VMOVDQ ymm6, [ S0 + YWORD_SIZE * 6 ]
+	VMOVDQ ymm7, [ S0 + YWORD_SIZE * 7 ]
 %endif
 %endif
 %endif
