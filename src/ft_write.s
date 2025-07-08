@@ -9,7 +9,7 @@ extern __errno_location: function
 %use smartalign
 ALIGNMODE p6
 
-section .text
+section .text align=16
 ; Writes N bytes from a buffer into a file descriptor.
 ; The buffer is assumed to be at least N bytes large.
 ; In case of error, sets errno properly.
@@ -21,7 +21,6 @@ section .text
 ;
 ; Return
 ; rax: the number of bytes written, or -1 if an error occurred.
-align 16
 ft_write:
 ; call sys_write
 	mov rax, 1

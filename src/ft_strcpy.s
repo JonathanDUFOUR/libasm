@@ -44,7 +44,7 @@ ALIGNMODE p6
 	ret
 %endmacro
 
-section .text
+section .text align=16
 ; Copies a string to another string.
 ; The source string is assumed to be null-terminated.
 ; The destination string is assumed to be large enough
@@ -56,7 +56,6 @@ section .text
 ;
 ; Return:
 ; rax: the address of the destination string.
-align 16
 ft_strcpy:
 ; preliminary initialization
 	mov rax, rdi

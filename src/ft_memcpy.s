@@ -39,7 +39,7 @@ ALIGNMODE p6
 	sub rdx, rcx
 %endmacro
 
-section .text
+section .text align=16
 ; Copies N bytes from a memory area to another.
 ; The memory areas are assumed to not overlap.
 ;
@@ -50,7 +50,6 @@ section .text
 ;
 ; Return:
 ; rax: the address of the destination memory area.
-align 16
 ft_memcpy:
 ; preliminary initialization
 	mov rax, rdi

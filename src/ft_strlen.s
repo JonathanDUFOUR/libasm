@@ -61,7 +61,7 @@ ALIGNMODE p6
 	VZEROUPPER_RET
 %endmacro
 
-section .text
+section .text align=16
 ; Calculates the length of a null-terminated string.
 ;
 ; Parameters
@@ -69,7 +69,6 @@ section .text
 ;
 ; Return
 ; rax: the length of string.
-align 16
 ft_strlen:
 ; preliminary initialization
 	mov rax, rdi

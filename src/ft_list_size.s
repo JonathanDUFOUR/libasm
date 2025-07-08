@@ -9,7 +9,7 @@ ALIGNMODE p6
 
 %include "node.s"
 
-section .text
+section .text align=16
 ; Calculates how many nodes a given list contains.
 ;
 ; Parameters
@@ -17,7 +17,6 @@ section .text
 ;
 ; Return:
 ; rax: the number of nodes in the list.
-align 16
 ft_list_size:
 ; preliminary initialization
 	xor rax, rax

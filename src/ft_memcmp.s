@@ -211,7 +211,7 @@ ALIGNMODE p6
 	ret
 %endmacro
 
-section .text
+section .text align=16
 ; Compares two memory area.
 ;
 ; Parameters
@@ -226,7 +226,6 @@ section .text
 ;   is less than the first one among the first N bytes of S1.
 ; - a positive value if the first mismatching byte among the N first bytes of S0
 ;   is greater than the first one among the first N bytes of S1.
-align 16
 ft_memcmp:
 	cmp rdx, YWORD_SIZE * 16
 	ja .compare_more_than_16_ywords

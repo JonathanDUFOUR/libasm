@@ -16,13 +16,12 @@ ALIGNMODE p6
 %define TRUE  1
 %define FALSE 0
 
-section .text
+section .text align=16
 ; Sorts a singly linked list in ascending order, using a function to compare data in the list.
 ;
 ; Parameters
 ; rdi: the address of a pointer to the 1st node of the list to sort. (assumed to be a valid address)
 ; rsi: the address of a function to compare data in the list. (assumed to be a valid address)
-align 16
 ft_list_sort:
 %define OLD_RBX [ rsp + QWORD_SIZE * 0 ]
 %define OLD_R12 [ rsp + QWORD_SIZE * 1 ]

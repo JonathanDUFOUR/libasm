@@ -14,20 +14,17 @@ ALIGNMODE p6
 %define QWORD_SIZE 8
 %define  NODE_SIZE t_node_size
 
-section .text
+section .text align=16
 ; Allocates a new node and prepends it to a given linked-list.
 ; In case of error, sets errno properly.
 ;
 ; Parameters
 ; rdi: the address of a pointer to the 1st node of the list to push to. (assumed to be a valid address)
 ; rsi: the address of the data to store in the new node to push.
-align 16
 ft_list_push_front:
-
 %define LIST [ rsp + QWORD_SIZE * 0 ]
 %define DATA [ rsp + QWORD_SIZE * 1 ]
 %define STACK_SIZE   QWORD_SIZE * 2
-
 ; reserve space for the local variables
 	sub rsp, STACK_SIZE
 ; initialize the local variables

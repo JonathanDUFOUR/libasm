@@ -25,7 +25,7 @@ ALIGNMODE p6
 	jz %1
 %endmacro
 
-section .text
+section .text align=16
 ; Parses a string into an integer, using a custom base.
 ; The base must be at least 2 characters long. It must not contain
 ; any duplicate characters, nor any of the following:
@@ -39,11 +39,8 @@ section .text
 ; eax:
 ; - the parsed integer value if the base is valid.
 ; - 0 otherwise.
-align 16
 ft_atoi_base:
-
 %define DIGIT_ARRAY_SIZE BYTE_SIZE * 256
-
 ; preserve the stack pointer and align it to its previous yword boundary
 	mov rdx, rsp
 	and rsp, -YWORD_SIZE
@@ -512,7 +509,7 @@ align 16
 	mov rsp, rdx
 	ret
 
-section .rodata
+section .rodata align=YWORD_SIZE
         HT: times YWORD_SIZE db 0x09
         VT: times YWORD_SIZE db 0x0B
         CR: times YWORD_SIZE db 0x0D

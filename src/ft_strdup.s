@@ -13,8 +13,8 @@ ALIGNMODE p6
 
 %define QWORD_SIZE 8
 
-section .text
-; Duplicates a string, using dynamic memory allocation.
+section .text align=16
+; Clones a string, using dynamic memory allocation.
 ; The source string is assumed to be null-terminated.
 ; In case of error, sets errno properly.
 ;
@@ -23,13 +23,10 @@ section .text
 ;
 ; Return:
 ; rax: the address of the newly allocated string, or NULL in case of error.
-align 16
 ft_strdup:
-
 %define S   [ rsp + QWORD_SIZE * 0 ]
 %define LEN [ rsp + QWORD_SIZE * 1 ]
 %define STACK_SIZE  QWORD_SIZE * 2
-
 ; calculate how many bytes shall be allocated
 	call ft_strlen
 	inc rax ; add 1 for the null-terminator

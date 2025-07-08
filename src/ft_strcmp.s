@@ -32,9 +32,9 @@ ALIGNMODE p6
 %else
 %define OFFSET 0
 %endif
-;         ┌─────────────┬──ymm1──(S0+OFFSET)[..YWORD_SIZE]
+;         ┌─────────────┬──ymm1──[S0+OFFSET]
 ; ymm4──AND             │
-;         └──ymm3──CMPEQB────────(S1+OFFSET)[..YWORD_SIZE]
+;         └──ymm3──CMPEQB────────[S1+OFFSET]
 	VMOVDQ ymm1, [ S0 + OFFSET ]
 	vpcmpeqb ymm3, ymm1, [ S1 + OFFSET ]
 	vpand ymm4, ymm3, ymm1
@@ -76,9 +76,9 @@ ALIGNMODE p6
 %else
 %define OFFSET %2
 %endif
-;         ┌─────────────┬──xmm1──(S0+OFFSET)[..OWORD_SIZE]
+;         ┌─────────────┬──xmm1──[S0+OFFSET]
 ; xmm4──AND             │
-;         └──xmm3──CMPEQB────────(S1+OFFSET)[..OWORD_SIZE]
+;         └──xmm3──CMPEQB────────[S1+OFFSET]
 	VMOVDQ xmm1, [ rdi + OFFSET ]
 	vpcmpeqb xmm3, xmm1, [ rsi + OFFSET ]
 	vpand xmm4, xmm3, xmm1
@@ -100,9 +100,9 @@ ALIGNMODE p6
 %else
 %define OFFSET %2
 %endif
-;         ┌─────────────┬──xmm1──(S0+OFFSET)[..CHUNK_SIZE]
+;         ┌─────────────┬──xmm1──[S0+OFFSET]
 ; xmm4──AND             │
-;         └──xmm3──CMPEQB──xmm2──(S1+OFFSET)[..CHUNK_SIZE]
+;         └──xmm3──CMPEQB──xmm2──[S1+OFFSET]
 	VMOV xmm1, [ rdi + OFFSET ]
 	VMOV xmm2, [ rsi + OFFSET ]
 	vpcmpeqb xmm3, xmm1, xmm2
@@ -167,7 +167,7 @@ ALIGNMODE p6
 	ret
 %endmacro
 
-section .text
+section .text align=16
 ; Compares two null-terminated strings.
 ;
 ; Parameters
@@ -179,7 +179,6 @@ section .text
 ; - zero if S0 and S1 completely match.
 ; - a negative value if the first mismatching byte in S0 is less than the first one in S1.
 ; - a positive value if the first mismatching byte in S0 is greater than the first one in S1.
-align 16
 ft_strcmp:
 ; preliminary initialization
 	vpxor xmm0, xmm0, xmm0 ; YWORD_CHECKER
@@ -219,21 +218,21 @@ advance_to_next_4_ywords:
 	jc at_most_4_ywords_before_S1_crosses
 align 16
 ILP_check_4_next_ywords_no_page_crossing:
-;                                      ┌─────────────┬──ymm1──(S0+YWORD_SIZE×0)[..YWORD_SIZE]
+;                                      ┌─────────────┬──ymm1──[S0_00_1F]
 ;                          ┌──ymm9───AND             │
-;                          │           └──ymm5──CMPEQB────────(S1+YWORD_SIZE×0)[..YWORD_SIZE]
+;                          │           └──ymm5──CMPEQB────────[S1_00_1F]
 ;            ┌──ymm13──MINUB
-;            │             │           ┌─────────────┬──ymm2──(S0+YWORD_SIZE×1)[..YWORD_SIZE]
+;            │             │           ┌─────────────┬──ymm2──[S0_20_3F]
 ;            │             └──ymm10──AND             │
-;            │                         └──ymm6──CMPEQB────────(S1+YWORD_SIZE×1)[..YWORD_SIZE]
+;            │                         └──ymm6──CMPEQB────────[S1_20_3F]
 ; ymm15──MINUB
-;            │                         ┌─────────────┬──ymm3──(S0+YWORD_SIZE×2)[..YWORD_SIZE]
+;            │                         ┌─────────────┬──ymm3──[S0_40_5F]
 ;            │             ┌──ymm11──AND             │
-;            │             │           └──ymm7──CMPEQB────────(S1+YWORD_SIZE×2)[..YWORD_SIZE]
+;            │             │           └──ymm7──CMPEQB────────[S1_40_5F]
 ;            └──ymm14──MINUB
-;                          │           ┌─────────────┬──ymm4──(S0+YWORD_SIZE×3)[..YWORD_SIZE]
+;                          │           ┌─────────────┬──ymm4──[S0_60_7F]
 ;                          └──ymm12──AND             │
-;                                      └──ymm8──CMPEQB────────(S1+YWORD_SIZE×3)[..YWORD_SIZE]
+;                                      └──ymm8──CMPEQB────────[S1_60_7F]
 	vmovdqa ymm1, [ rdi + YWORD_SIZE * 0 ]
 	vmovdqa ymm2, [ rdi + YWORD_SIZE * 1 ]
 	vmovdqa ymm3, [ rdi + YWORD_SIZE * 2 ]
