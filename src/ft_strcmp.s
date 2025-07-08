@@ -113,7 +113,7 @@ ALIGNMODE p6
 	jnz mismatch_or_null_mask_in_ymm6
 %endmacro
 
-; REMIND: check for a more efficient way using AVX2
+; TODO: check for a more efficient way using AVX2
 ; Optional parameters
 ; %1: the offset to apply before loading the next word from both S0 and S1.
 %macro CHECK_AND_COMPARE_WORD 0-1
@@ -314,8 +314,6 @@ at_least_1_yword_before_S0_crosses:
 	jl at_least_1_yword_before_S0_crosses
 ; set the index to the last yword of the current S0 page
 	sub edx, eax
-; check if it has already been checked
-	jz align_S0_and_adjust_S1 ; REMIND: test without this line to compare performances
 	CHECK_AND_COMPARE_YWORD rdi, rsi, vmovdqa, rdx
 	jz align_S0_and_adjust_S1
 align 16
@@ -358,8 +356,6 @@ less_than_1_yword_before_S0_crosses:
 ; set the index to the last oword of the current S0 page
 	mov edx, OWORD_SIZE
 	sub edx, eax
-; check if it has already been checked
-	jz align_S0_and_adjust_S1 ; REMIND: test without this line to compare performances
 	CHECK_AND_COMPARE_OWORD vmovdqa, rdx
 	jmp align_S0_and_adjust_S1
 
@@ -373,8 +369,6 @@ less_than_1_oword_before_S0_crosses:
 ; set the index to the last qword of the current S0 page
 	mov edx, OWORD_SIZE + QWORD_SIZE
 	sub edx, eax
-; check if it has already been checked
-	jz align_S0_and_adjust_S1 ; REMIND: test without this line to compare performances
 	CHECK_AND_COMPARE_CHUNK vmovq, rdx
 	jmp align_S0_and_adjust_S1
 
@@ -388,8 +382,6 @@ less_than_1_qword_before_S0_crosses:
 ; set the index to the last dword of the current S0 page
 	mov edx, OWORD_SIZE + QWORD_SIZE + DWORD_SIZE
 	sub edx, eax
-; check if it has already been checked
-	jz align_S0_and_adjust_S1 ; REMIND: test without this line to compare performance
 	CHECK_AND_COMPARE_CHUNK vmovd, rdx
 	jmp align_S0_and_adjust_S1
 
@@ -402,8 +394,6 @@ less_than_1_dword_before_S0_crosses:
 ; set the index to the last word of the current S0 page
 	mov edx, OWORD_SIZE + QWORD_SIZE + DWORD_SIZE + WORD_SIZE
 	sub edx, eax
-; check if it has already been checked
-	jz align_S0_and_adjust_S1 ; REMIND: test without this line to compare performance
 	CHECK_AND_COMPARE_WORD rdx
 	jmp align_S0_and_adjust_S1
 
