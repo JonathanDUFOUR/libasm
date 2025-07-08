@@ -18,6 +18,14 @@ ALIGNMODE p6
 %define  WORD_BITS  WORD_SIZE * 8
 %define DWORD_BITS DWORD_SIZE * 8
 
+%define  YMM_00_1F ymm0
+%define  YMM_20_3F ymm1
+%define  YMM_40_5F ymm2
+%define  YMM_60_7F ymm3
+%define  YMM_80_9F ymm4
+%define  YMM_A0_BF ymm5
+%define  YMM_C0_DF ymm6
+%define  YMM_E0_FF ymm7
 %define MASK_00_1F ymm8
 %define MASK_20_3F ymm9
 %define MASK_40_5F ymm10
@@ -55,62 +63,62 @@ ALIGNMODE p6
 %define             S1 %3
 %define    YWORD_COUNT %4
 %define MISMATCH_LABEL %5
-;                                                ┌──ymm0──(S0+YWORD_SIZE×0)[..YWORD_SIZE]
-;                               ┌──ymm8───VPCMPEQB
-;                               │                └────────(S1+YWORD_SIZE×0)[..YWORD_SIZE]
-;                    ┌──ymm0──AND
-;                    │          │                ┌──ymm1──(S0+YWORD_SIZE×1)[..YWORD_SIZE]
-;                    │          └──ymm9───VPCMPEQB
-;                    │                           └────────(S1+YWORD_SIZE×1)[..YWORD_SIZE]
-;         ┌──ymm4──AND
-;         │          │                           ┌──ymm2──(S0+YWORD_SIZE×2)[..YWORD_SIZE]
-;         │          │          ┌──ymm10──VPCMPEQB
-;         │          │          │                └────────(S1+YWORD_SIZE×2)[..YWORD_SIZE]
-;         │          └──ymm1──AND
-;         │                     │                ┌──ymm3──(S0+YWORD_SIZE×3)[..YWORD_SIZE]
-;         │                     └──ymm11──VPCMPEQB
-;         │                                      └────────(S1+YWORD_SIZE×3)[..YWORD_SIZE]
-; ymm6──AND
-;         │                                      ┌──ymm4──(S0+YWORD_SIZE×4)[..YWORD_SIZE]
-;         │                     ┌──ymm12──VPCMPEQB
-;         │                     │                └────────(S1+YWORD_SIZE×4)[..YWORD_SIZE]
-;         │          ┌──ymm2──AND
-;         │          │          │                ┌──ymm5──(S0+YWORD_SIZE×5)[..YWORD_SIZE]
-;         │          │          └──ymm13──VPCMPEQB
-;         │          │                           └────────(S1+YWORD_SIZE×5)[..YWORD_SIZE]
-;         └──ymm5──AND
-;                    │                           ┌──ymm6──(S0+YWORD_SIZE×6)[..YWORD_SIZE]
-;                    │          ┌──ymm14──VPCMPEQB
-;                    │          │                └────────(S1+YWORD_SIZE×6)[..YWORD_SIZE]
-;                    └──ymm3──AND
-;                               │                ┌──ymm7──(S0+YWORD_SIZE×7)[..YWORD_SIZE]
-;                               └──ymm15──VPCMPEQB
-;                                                └────────(S1+YWORD_SIZE×7)[..YWORD_SIZE]
-	VMOVDQ ymm0, [ S0 + YWORD_SIZE * 0 ]
+;                                                                     ┌──YMM_00_1F──[S0_00_1F]
+;                                                 ┌──MASK_00_1F──CMPEQB
+;                                                 │                   └─────────────[S1_00_1F]
+;                                ┌──MASK_00_3F──AND
+;                                │                │                   ┌──YMM_20_3F──[S0_20_3F]
+;                                │                └──MASK_20_3F──CMPEQB
+;                                │                                    └─────────────[S1_20_3F]
+;               ┌──MASK_00_7F──AND
+;               │                │                                    ┌──YMM_40_5F──[S0_40_5F]
+;               │                │                ┌──MASK_40_5F──CMPEQB
+;               │                │                │                   └─────────────[S1_40_5F]
+;               │                └──MASK_40_7F──AND
+;               │                                 │                   ┌──YMM_60_7F──[S0_60_7F]
+;               │                                 └──MASK_60_7F──CMPEQB
+;               │                                                     └─────────────[S1_60_7F]
+; MASK_00_FF──AND
+;               │                                                     ┌──YMM_80_9F──[S0_80_9F]
+;               │                                 ┌──MASK_80_9F──CMPEQB
+;               │                                 │                   └─────────────[S1_80_9F]
+;               │                ┌──MASK_80_BF──AND
+;               │                │                │                   ┌──YMM_A0_BF──[S0_A0_BF]
+;               │                │                └──MASK_A0_BF──CMPEQB   
+;               │                │                                    └─────────────[S1_A0_BF]
+;               └──MASK_80_FF──AND
+;                                │                                    ┌──YMM_C0_DF──[S0_C0_DF]
+;                                │                ┌──MASK_C0_DF──CMPEQB
+;                                │                │                   └─────────────[S1_C0_DF]
+;                                └──MASK_C0_FF──AND
+;                                                 │                   ┌──YMM_E0_FF──[S0_E0_FF]
+;                                                 └──MASK_E0_FF──CMPEQB
+;                                                                     └─────────────[S1_E0_FF]
+	VMOVDQ YMM_00_1F, [ S0 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	VMOVDQ ymm1, [ S0 + YWORD_SIZE * 1 ]
+	VMOVDQ YMM_20_3F, [ S0 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	VMOVDQ ymm2, [ S0 + YWORD_SIZE * 2 ]
-	VMOVDQ ymm3, [ S0 + YWORD_SIZE * 3 ]
+	VMOVDQ YMM_40_5F, [ S0 + YWORD_SIZE * 2 ]
+	VMOVDQ YMM_60_7F, [ S0 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	VMOVDQ ymm4, [ S0 + YWORD_SIZE * 4 ]
-	VMOVDQ ymm5, [ S0 + YWORD_SIZE * 5 ]
-	VMOVDQ ymm6, [ S0 + YWORD_SIZE * 6 ]
-	VMOVDQ ymm7, [ S0 + YWORD_SIZE * 7 ]
+	VMOVDQ YMM_80_9F, [ S0 + YWORD_SIZE * 4 ]
+	VMOVDQ YMM_A0_BF, [ S0 + YWORD_SIZE * 5 ]
+	VMOVDQ YMM_C0_DF, [ S0 + YWORD_SIZE * 6 ]
+	VMOVDQ YMM_E0_FF, [ S0 + YWORD_SIZE * 7 ]
 %endif
 %endif
 %endif
-	vpcmpeqb MASK_00_1F, ymm0, [ S1 + YWORD_SIZE * 0 ]
+	vpcmpeqb MASK_00_1F, YMM_00_1F, [ S1 + YWORD_SIZE * 0 ]
 %if YWORD_COUNT > 1
-	vpcmpeqb MASK_20_3F, ymm1, [ S1 + YWORD_SIZE * 1 ]
+	vpcmpeqb MASK_20_3F, YMM_20_3F, [ S1 + YWORD_SIZE * 1 ]
 %if YWORD_COUNT > 2
-	vpcmpeqb MASK_40_5F, ymm2, [ S1 + YWORD_SIZE * 2 ]
-	vpcmpeqb MASK_60_7F, ymm3, [ S1 + YWORD_SIZE * 3 ]
+	vpcmpeqb MASK_40_5F, YMM_40_5F, [ S1 + YWORD_SIZE * 2 ]
+	vpcmpeqb MASK_60_7F, YMM_60_7F, [ S1 + YWORD_SIZE * 3 ]
 %if YWORD_COUNT > 4
-	vpcmpeqb MASK_80_9F, ymm4, [ S1 + YWORD_SIZE * 4 ]
-	vpcmpeqb MASK_A0_BF, ymm5, [ S1 + YWORD_SIZE * 5 ]
-	vpcmpeqb MASK_C0_DF, ymm6, [ S1 + YWORD_SIZE * 6 ]
-	vpcmpeqb MASK_E0_FF, ymm7, [ S1 + YWORD_SIZE * 7 ]
+	vpcmpeqb MASK_80_9F, YMM_80_9F, [ S1 + YWORD_SIZE * 4 ]
+	vpcmpeqb MASK_A0_BF, YMM_A0_BF, [ S1 + YWORD_SIZE * 5 ]
+	vpcmpeqb MASK_C0_DF, YMM_C0_DF, [ S1 + YWORD_SIZE * 6 ]
+	vpcmpeqb MASK_E0_FF, YMM_E0_FF, [ S1 + YWORD_SIZE * 7 ]
 %endif
 %endif
 %endif
