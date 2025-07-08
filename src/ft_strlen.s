@@ -7,18 +7,39 @@ global ft_strlen: function
 %use smartalign
 ALIGNMODE p6
 
-%define YWORD_SIZE 32
+%define YWORD_SIZE 0x20
 
-; TODO: rearrange the position of the macro definitions
-; TOOD: for each macro with parameters, name the parameters
+%define NULL_YMM ymm0
+
+%define ADDR_00_1F [ rax + YWORD_SIZE * 0 ]
+%define ADDR_20_3F [ rax + YWORD_SIZE * 1 ]
+%define ADDR_40_5F [ rax + YWORD_SIZE * 2 ]
+%define ADDR_60_7F [ rax + YWORD_SIZE * 3 ]
+%define ADDR_80_9F [ rax + YWORD_SIZE * 4 ]
+%define ADDR_A0_BF [ rax + YWORD_SIZE * 5 ]
+%define ADDR_C0_DF [ rax + YWORD_SIZE * 6 ]
+%define ADDR_E0_FF [ rax + YWORD_SIZE * 7 ]
+%define  YMM_00_1F ymm1
+%define  YMM_40_5F ymm2
+%define  YMM_80_9F ymm3
+%define  YMM_C0_DF ymm4
+%define MASK_00_3F ymm5
+%define MASK_40_7F ymm6
+%define MASK_80_BF ymm7
+%define MASK_C0_FF ymm8
+%define MASK_00_7F ymm9
+%define MASK_80_FF ymm10
+%define MASK_00_FF ymm11
 
 ; Parameters
 ; %1: the label to jump to if the given YMM register contains a null byte.
 ; %2: the yword to check (may be a YMM register or an address).
 %macro JUMP_IF_HAS_A_NULL_BYTE 2
-	vpcmpeqb ymm12, ymm0, %2
+%define          LABEL %1
+%define YWORD_TO_CHECK %2
+	vpcmpeqb ymm12, NULL_YMM, YWORD_TO_CHECK
 	vptest ymm12, ymm12
-	jnz %1
+	jnz LABEL
 %endmacro
 
 %macro VZEROUPPER_RET 0
@@ -29,11 +50,12 @@ ALIGNMODE p6
 ; Parameters
 ; %1: the offset to apply to the pointer before calculating the final length.
 %macro RETURN_FINAL_LENGTH 1
+%define OFFSET %1
 ; calculate the index of the 1st null byte in the given YMM register
 	vpmovmskb rcx, ymm12
 	bsf ecx, ecx
 ; update the pointer to its final position
-	lea rax, [ rax + %1 + rcx ]
+	lea rax, [ rax + OFFSET + rcx ]
 ; calculate the length
 	sub rax, rdi
 	VZEROUPPER_RET
@@ -43,7 +65,7 @@ section .text
 ; Calculates the length of a null-terminated string.
 ;
 ; Parameters
-; rdi: the address of the string to calculate the length of. (assumed to be a valid address)
+; rdi: S: the address of the string to calculate the length of. (assumed to be a valid address)
 ;
 ; Return
 ; rax: the length of string.
@@ -51,156 +73,149 @@ align 16
 ft_strlen:
 ; preliminary initialization
 	mov rax, rdi
-	vpxor ymm0, ymm0, ymm0
+	vpxor NULL_YMM, NULL_YMM, NULL_YMM
 ; align S to its previous yword boundary
 	and rax, -YWORD_SIZE
 ; check if the 1st yword contains a null byte
-	vpcmpeqb ymm12, ymm0, [ rax ]
+	vpcmpeqb ymm12, NULL_YMM, ADDR_00_1F
 	vpmovmskb rdx, ymm12
 ; ignore the unwanted leading bytes
 	shrx edx, edx, edi
 ; calculate the index of the 1st null byte in the 1st yword if any
 	bsf edx, edx
 	jnz .small_length
-; update S to the next yword boundary
+; advance S to its next yword boundary
 	add rax, YWORD_SIZE
-;align_S_to_next_2_ywords_boundary:
+;align_S_to_next_2_yword_boundary:
+; check if S is already aligned to a 2-yword boundary
 	test rax, YWORD_SIZE
-	jz .align_S_to_next_4_ywords_boundary
+	jz .align_S_to_next_4_yword_boundary
 ; check if the next yword contains a null byte
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, [ rax ]
-; update the pointer to the next 2-ywords boundary
+	JUMP_IF_HAS_A_NULL_BYTE found_null_byte.in_00_1F, ADDR_00_1F
+; advance S to its next 2-yword boundary
 	add rax, YWORD_SIZE
 align 16
-.align_S_to_next_4_ywords_boundary:
+.align_S_to_next_4_yword_boundary:
+; check if S is already aligned to a 4-yword boundary
 	test rax, YWORD_SIZE * 2
-	jz .align_S_to_next_8_ywords_boundary
-; load 1 of the next 2 ywords from the string
-	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
-; merge the 2 ywords into 1 yword that will contain their minimum byte values
-; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5, ymm1, [ rax + YWORD_SIZE * 1 ]
-;    ,---ymm1  s[0x00..=0x1F]
-; ymm5
-;    '-------  s[0x20..=0x3F]
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm5
-; update the pointer to the next 4-ywords boundary
+	jz .align_S_to_next_8_yword_boundary
+;                 ┌──YMM_00_1F──(S+0x00)[..YWORD_SIZE]
+; MASK_00_3F──MINUB
+;                 └─────────────(S+0x20)[..YWORD_SIZE]
+	vmovdqa YMM_00_1F, ADDR_00_1F
+	vpminub MASK_00_3F, YMM_00_1F, ADDR_20_3F
+; check if there is a null byte
+	JUMP_IF_HAS_A_NULL_BYTE found_null_byte.in_00_3F, MASK_00_3F
+; advance S to its next 4-yword boundary
 	add rax, YWORD_SIZE * 2
 align 16
-.align_S_to_next_8_ywords_boundary:
+.align_S_to_next_8_yword_boundary:
 	test rax, YWORD_SIZE * 4
 	jz .check_next_8_ywords
-; load 2 of the next 4 ywords from the string
-	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
-	vmovdqa ymm2, [ rax + YWORD_SIZE * 2 ]
-; merge the 4 ywords into 1 yword that will contain their minimum byte values
-; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5, ymm1, [ rax + YWORD_SIZE * 1 ]
-	vpminub ymm6, ymm2, [ rax + YWORD_SIZE * 3 ]
-	vpminub ymm9, ymm5, ymm6
-;            ,---ymm1  s[0x00..=0x1F]
-;    ,----ymm5
-;    |       '-------  s[0x20..=0x3F]
-; ymm9
-;    |       ,---ymm2  s[0x40..=0x5F]
-;    '----ymm6
-;            '-------  s[0x60..=0x7F]
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm9
-; update the pointer to the next 8-ywords boundary
+;                                     ┌──YMM_00_1F──(S+0x00)[..YWORD_SIZE]
+;                  ┌──MASK_00_3F──MINUB
+;                  │                  └─────────────(S+0x20)[..YWORD_SIZE]
+; MASK_00_7F───MINUB
+;                  │                  ┌──YMM_40_5F──(S+0x40)[..YWORD_SIZE]
+;                  └──MASK_40_7F──MINUB
+;                                     └─────────────(S+0x60)[..YWORD_SIZE]
+	vmovdqa YMM_00_1F, ADDR_00_1F
+	vmovdqa YMM_40_5F, ADDR_40_5F
+	vpminub MASK_00_3F, YMM_00_1F, ADDR_20_3F
+	vpminub MASK_40_7F, YMM_40_5F, ADDR_60_7F
+	vpminub MASK_00_7F, MASK_00_3F, MASK_40_7F
+; check if there is a null byte
+	JUMP_IF_HAS_A_NULL_BYTE found_null_byte.in_00_7F, MASK_00_7F
+; advance S to its next 8-yword boundary
 	add rax, YWORD_SIZE * 4
 align 16
 .check_next_8_ywords:
-; load 4 of the next 8 ywords from the string
-	vmovdqa ymm1, [ rax + YWORD_SIZE * 0 ]
-	vmovdqa ymm2, [ rax + YWORD_SIZE * 2 ]
-	vmovdqa ymm3, [ rax + YWORD_SIZE * 4 ]
-	vmovdqa ymm4, [ rax + YWORD_SIZE * 6 ]
-; merge the 8 ywords into 1 yword that will contain their minimum byte values
-; (see the diagram below for a more visual representation of the process)
-	vpminub ymm5,  ymm1, [ rax + YWORD_SIZE * 1 ]
-	vpminub ymm6,  ymm2, [ rax + YWORD_SIZE * 3 ]
-	vpminub ymm7,  ymm3, [ rax + YWORD_SIZE * 5 ]
-	vpminub ymm8,  ymm4, [ rax + YWORD_SIZE * 7 ]
-	vpminub ymm9,  ymm5, ymm6
-	vpminub ymm10, ymm7, ymm8
-	vpminub ymm11, ymm9, ymm10
-;                    ,---ymm1  s[0x00..=0x1F]
-;            ,----ymm5
-;            |       '-------  s[0x20..=0x3F]
-;     ,---ymm9
-;     |      |       ,---ymm2  s[0x40..=0x5F]
-;     |      '----ymm6
-;     |              '-------  s[0x60..=0x7F]
-; ymm11
-;     |              ,---ymm3  s[0x80..=0x9F]
-;     |       ,---ymm7
-;     |       |      '-------  s[0xA0..=0xBF]
-;     '---ymm10
-;             |      ,---ymm4  s[0xC0..=0xDF]
-;             '---ymm8
-;                    '-------  s[0xE0..=0xFF]
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0xFF, ymm11
-; update the pointer
+;                                                       ┌──YMM_00_1F──(S+0x00)[..YWORD_SIZE]
+;                                    ┌──MASK_00_3F──MINUB
+;                                    │                  └─────────────(S+0x20)[..YWORD_SIZE]
+;                 ┌──MASK_00_7F──MINUB
+;                 │                  │                  ┌──YMM_40_5F──(S+0x40)[..YWORD_SIZE]
+;                 │                  └──MASK_40_7F──MINUB
+;                 │                                     └─────────────(S+0x60)[..YWORD_SIZE]
+; MASK_00_FF──MINUB
+;                 │                                     ┌──YMM_80_9F──(S+0x80)[..YWORD_SIZE]
+;                 │                  ┌──MASK_80_BF──MINUB
+;                 │                  │                  └─────────────(S+0xA0)[..YWORD_SIZE]
+;                 └──MASK_80_FF──MINUB
+;                                    │                  ┌──YMM_C0_DF──(S+0xC0)[..YWORD_SIZE]
+;                                    └──MASK_C0_FF──MINUB
+;                                                       └─────────────(S+0xE0)[..YWORD_SIZE]
+	vmovdqa YMM_00_1F, ADDR_00_1F
+	vmovdqa YMM_40_5F, ADDR_40_5F
+	vmovdqa YMM_80_9F, ADDR_80_9F
+	vmovdqa YMM_C0_DF, ADDR_C0_DF
+	vpminub MASK_00_3F, YMM_00_1F, ADDR_20_3F
+	vpminub MASK_40_7F, YMM_40_5F, ADDR_60_7F
+	vpminub MASK_80_BF, YMM_80_9F, ADDR_A0_BF
+	vpminub MASK_C0_FF, YMM_C0_DF, ADDR_E0_FF
+	vpminub MASK_00_7F, MASK_00_3F, MASK_40_7F
+	vpminub MASK_80_FF, MASK_80_BF, MASK_C0_FF
+	vpminub MASK_00_FF, MASK_00_7F, MASK_80_FF
+; check if there is a null byte
+	JUMP_IF_HAS_A_NULL_BYTE found_null_byte.in_00_FF, MASK_00_FF
+; advance S to its next 8 ywords
 	add rax, YWORD_SIZE * 8
 ; repeat until the next 8 ywords contain a null byte
 	jmp .check_next_8_ywords
-
-;---------------------------------------------+
-; figure out which yword contains a null byte |
-;             using binary search             |
-;---------------------------------------------+
-
-align 16
-.found_null_byte_in_0x00_0xFF:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x7F, ymm9
-;found_null_byte_in_0x80_0xFF:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0xBF, ymm7
-;found_null_byte_in_0xC0_0xFF:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0xC0_0xDF, ymm4
-;found_null_byte_in_0xE0_0xFF:
-	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 7 ]
-	RETURN_FINAL_LENGTH 0xE0
-
-align 16
-.found_null_byte_in_0x00_0x7F:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x3F, ymm5
-;found_null_byte_in_0x40_0x7F:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x40_0x5F, ymm2
-;found_null_byte_in_0x60_0x7F:
-	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 3 ]
-	RETURN_FINAL_LENGTH 0x60
-
-align 16
-.found_null_byte_in_0x00_0x3F:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x00_0x1F, ymm1
-;found_null_byte_in_0x20_0x3F:
-	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 1 ]
-	RETURN_FINAL_LENGTH 0x20
-
-align 16
-.found_null_byte_in_0x00_0x1F:
-	RETURN_FINAL_LENGTH 0x00
-
-align 16
-.found_null_byte_in_0x40_0x5F:
-	RETURN_FINAL_LENGTH 0x40
-
-align 16
-.found_null_byte_in_0x80_0xBF:
-	JUMP_IF_HAS_A_NULL_BYTE .found_null_byte_in_0x80_0x9F, ymm3
-;found_null_byte_in_0xA0_0xBF:
-	vpcmpeqb ymm12, ymm0, [ rax + YWORD_SIZE * 5 ]
-	RETURN_FINAL_LENGTH 0xA0
-
-align 16
-.found_null_byte_in_0x80_0x9F:
-	RETURN_FINAL_LENGTH 0x80
-
-align 16
-.found_null_byte_in_0xC0_0xDF:
-	RETURN_FINAL_LENGTH 0xC0
 
 align 16
 .small_length:
 	mov rax, rdx
 	VZEROUPPER_RET
+
+found_null_byte:
+
+align 16
+.in_00_FF:
+	JUMP_IF_HAS_A_NULL_BYTE .in_00_7F, MASK_00_7F
+;in_80_FF:
+	JUMP_IF_HAS_A_NULL_BYTE .in_80_BF, MASK_80_BF
+;in_C0_FF:
+	JUMP_IF_HAS_A_NULL_BYTE .in_C0_DF, YMM_C0_DF
+;in_E0_FF:
+	vpcmpeqb ymm12, NULL_YMM, ADDR_E0_FF
+	RETURN_FINAL_LENGTH 0xE0
+
+align 16
+.in_00_7F:
+	JUMP_IF_HAS_A_NULL_BYTE .in_00_3F, MASK_00_3F
+;in_40_7F:
+	JUMP_IF_HAS_A_NULL_BYTE .in_40_5F, YMM_40_5F
+;in_60_7F:
+	vpcmpeqb ymm12, NULL_YMM, ADDR_60_7F
+	RETURN_FINAL_LENGTH 0x60
+
+align 16
+.in_00_3F:
+	JUMP_IF_HAS_A_NULL_BYTE .in_00_1F, ADDR_00_1F
+;in_20_3F:
+	vpcmpeqb ymm12, NULL_YMM, ADDR_20_3F
+	RETURN_FINAL_LENGTH 0x20
+
+align 16
+.in_00_1F:
+	RETURN_FINAL_LENGTH 0x00
+
+align 16
+.in_40_5F:
+	RETURN_FINAL_LENGTH 0x40
+
+align 16
+.in_80_BF:
+	JUMP_IF_HAS_A_NULL_BYTE .in_80_9F, YMM_80_9F
+;in_A0_BF:
+	vpcmpeqb ymm12, NULL_YMM, ADDR_A0_BF
+	RETURN_FINAL_LENGTH 0xA0
+
+align 16
+.in_80_9F:
+	RETURN_FINAL_LENGTH 0x80
+
+align 16
+.in_C0_DF:
+	RETURN_FINAL_LENGTH 0xC0
