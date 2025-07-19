@@ -7,7 +7,7 @@ global ft_list_sort: function
 %use smartalign
 ALIGNMODE p6
 
-%include "node.s"
+%include "node.nasm"
 
 %define QWORD_SIZE 8
 

@@ -9,7 +9,7 @@ extern malloc: function
 %use smartalign
 ALIGNMODE p6
 
-%include "node.s"
+%include "node.nasm"
 
 %define QWORD_SIZE 8
 %define  NODE_SIZE t_node_size

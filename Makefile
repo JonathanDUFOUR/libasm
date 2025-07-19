@@ -29,17 +29,20 @@ BONUS_NAME := libasm_bonus.a
 #######################################
 SRC_DIR := src
 OBJ_DIR := obj
+PRV_DIR := private
 
 ######################################
 #            SOURCE FILES            #
 ######################################
 SRC := \
-	${addsuffix .s, \
+	${addsuffix .nasm, \
 		${addprefix ft_, \
 			memcmp \
 			memcpy \
 			read \
-			strcmp \
+			${addprefix strcmp/, \
+				core \
+			} \
 			strcpy \
 			strdup \
 			strlen \
@@ -48,7 +51,7 @@ SRC := \
 	} \
 
 BONUS_SRC := \
-	${addsuffix .s, \
+	${addsuffix .nasm, \
 		${addprefix ft_, \
 			atoi_base \
 			${addprefix list_, \
@@ -63,19 +66,20 @@ BONUS_SRC := \
 ######################################
 #            OBJECT FILES            #
 ######################################
-OBJ := ${addprefix ${OBJ_DIR}/, ${SRC:.s=.o}}
+OBJ := ${addprefix ${OBJ_DIR}/, ${SRC:.nasm=.o}}
 DEP := ${OBJ:.o=.d}
 
-BONUS_OBJ := ${addprefix ${OBJ_DIR}/, ${BONUS_SRC:.s=.o}}
+BONUS_OBJ := ${addprefix ${OBJ_DIR}/, ${BONUS_SRC:.nasm=.o}}
 BONUS_DEP := ${BONUS_OBJ:.o=.d}
 
 #######################################
 #                FLAGS                #
 #######################################
-NASM_FLAGS := \
+NASM_FLAGS = \
 	-f elf64 \
 	-werror \
-	-I ${SRC_DIR} \
+	-I ${<D}/ \
+	-I ${PRV_DIR}/ \
 
 ifeq (${DEBUG}, 1)
 	NASM_FLAGS += -g
@@ -99,7 +103,7 @@ ${BONUS_NAME}: ${BONUS_OBJ}
 
 -include ${DEP} ${BONUS_DEP}
 
-${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
+${OBJ_DIR}/%.o: ${SRC_DIR}/%.nasm
 	@${MKDIR} ${@D}
 	${strip ${NASM} ${NASM_FLAGS} -M -MF ${@:.o=.d} $< ${OUTPUT_OPTION}}
 	${strip ${NASM} ${NASM_FLAGS} $< ${OUTPUT_OPTION}}

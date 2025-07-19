@@ -1,0 +1,8 @@
+%ifndef CHUNK_MASKS_NASM
+%define CHUNK_MASKS_NASM
+
+%define  WORD_MASK 0xFFFFFFF3
+%define DWORD_MASK 0xFFFFFFF0
+%define QWORD_MASK 0xFFFFFF00
+
+%endif

@@ -7,7 +7,7 @@ global ft_list_size: function
 %use smartalign
 ALIGNMODE p6
 
-%include "node.s"
+%include "node.nasm"
 
 section .text align=16
 ; Calculates how many nodes a given list contains.

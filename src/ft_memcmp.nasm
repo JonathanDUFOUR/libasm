@@ -18,6 +18,15 @@ ALIGNMODE p6
 %define  WORD_BITS  WORD_SIZE * 8
 %define DWORD_BITS DWORD_SIZE * 8
 
+%define GPR_00_FF r8d
+%define GPR_00_7F r9d
+%define GPR_00_3F r10d
+%define GPR_80_BF r10d
+%define GPR_00_1F eax
+%define GPR_40_5F eax
+%define GPR_80_9F eax
+%define GPR_C0_DF eax
+
 %define  YMM_00_1F ymm0
 %define  YMM_20_3F ymm1
 %define  YMM_40_5F ymm2
@@ -41,15 +50,6 @@ ALIGNMODE p6
 %define MASK_00_7F ymm4
 %define MASK_80_FF ymm5
 %define MASK_00_FF ymm6
-
-%define GPR_00_FF r8d
-%define GPR_00_7F r9d
-%define GPR_00_3F r10d
-%define GPR_80_BF r10d
-%define GPR_00_1F eax
-%define GPR_40_5F eax
-%define GPR_80_9F eax
-%define GPR_C0_DF eax
 
 ; Parameters
 ; %1: the instruction to use to load the yword(s). (assumed to be either vmovdqa or vmovdqu)
