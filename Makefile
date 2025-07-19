@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2025/05/20 16:59:33 by jodufour         ###   ########.fr        #
+#    Updated: 2025/07/17 20:21:52 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -101,7 +101,8 @@ ${BONUS_NAME}: ${BONUS_OBJ}
 
 ${OBJ_DIR}/%.o: ${SRC_DIR}/%.s
 	@${MKDIR} ${@D}
-	${strip ${NASM} ${NASM_FLAGS} -MD ${@:.o=.d} $< ${OUTPUT_OPTION}}
+	${strip ${NASM} ${NASM_FLAGS} -M -MF ${@:.o=.d} $< ${OUTPUT_OPTION}}
+	${strip ${NASM} ${NASM_FLAGS} $< ${OUTPUT_OPTION}}
 
 .PHONY: clean
 clean:
