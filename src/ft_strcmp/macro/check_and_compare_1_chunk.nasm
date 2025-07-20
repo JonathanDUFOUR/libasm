@@ -1,5 +1,5 @@
-%ifndef CHECK_AND_COMPARE_CHUNK_NASM
-%define CHECK_AND_COMPARE_CHUNK_NASM
+%ifndef CHECK_AND_COMPARE_1_CHUNK_NASM
+%define CHECK_AND_COMPARE_1_CHUNK_NASM
 
 %include "define/registers.nasm"
 
@@ -10,7 +10,7 @@
 ;
 ; Optionnal parameters
 ; %3: the offset to apply.
-%macro CHECK_AND_COMPARE_CHUNK 2-3
+%macro CHECK_AND_COMPARE_1_CHUNK 2-3
 %define LOAD %1
 %define MASK %2
 %if %0 > 2
@@ -32,6 +32,7 @@
 	vpmovmskb ecx, xmm1
 	or ecx, MASK
 	inc ecx
+	jnz mismatch_or_null_at_edx
 %endmacro
 
 %endif

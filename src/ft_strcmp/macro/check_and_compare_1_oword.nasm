@@ -1,5 +1,5 @@
-%ifndef CHECK_AND_COMPARE_OWORD_NASM
-%define CHECK_AND_COMPARE_OWORD_NASM
+%ifndef CHECK_AND_COMPARE_1_OWORD_NASM
+%define CHECK_AND_COMPARE_1_OWORD_NASM
 
 %include "define/registers.nasm"
 
@@ -8,7 +8,7 @@
 ;
 ; Optionnal parameters
 ; %2: the offset to apply.
-%macro CHECK_AND_COMPARE_OWORD 1-2
+%macro CHECK_AND_COMPARE_1_OWORD 1-2
 %define LOAD %1
 %if %0 > 1
 %define OFFSET %2
@@ -27,6 +27,7 @@
 ; check if there is a (mismatching|null) byte
 	vpmovmskb ecx, xmm1
 	inc cx
+	jnz mismatch_or_null_at_edx
 %endmacro
 
 %endif

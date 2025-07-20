@@ -1,0 +1,31 @@
+%ifndef CHECK_AND_COMPARE_1_YWORD_NASM
+%define CHECK_AND_COMPARE_1_YWORD_NASM
+
+; Parameters
+; %1: vmovdqa(a|u).
+; %2: the address of the 1st string to compare. (assumed to be a valid address)
+; %3: the address of the 2nd string to compare. (assumed to be a valid address)
+;
+; Optional parameters
+; %4: the offset to apply.
+%macro CHECK_AND_COMPARE_1_YWORD 3-4
+%define        LOAD %1
+%define          S0 %2
+%define          S1 %3
+%if %0 > 3
+%define OFFSET %4
+%else
+%define OFFSET 0
+%endif
+;                                             ┌──NULL_YWORD
+;               ┌──not──NULL_MASK_00_1F──cmpeqb
+; MASK_00_1F──and                             ├──YMM_00_1F──[S0_00_1F]
+;               └───────DIFF_MASK_00_1F──cmpeqb
+;                                             └─────────────[S1_00_1F]
+	LOAD YMM_00_1F, [ S0 + OFFSET + 0x00 ]
+	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFFSET + 0x00 ]
+	vpcmpeqb NULL_MASK_00_1F, YMM_00_1F, NULL_YWORD
+	vpandn MASK_00_1F, NULL_MASK_00_1F, DIFF_MASK_00_1F
+%endmacro
+
+%endif
