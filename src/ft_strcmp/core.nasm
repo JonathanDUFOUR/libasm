@@ -15,6 +15,7 @@ ALIGNMODE p6
 %include "macro/check_and_compare_1_yword.nasm"
 %include "macro/check_and_compare_2_ywords.nasm"
 %include "macro/check_and_compare_4_ywords.nasm"
+%include "macro/jcc_ymm_has_null_byte.nasm"
 %include "macro/jcc_ymm_mask_has_null_byte.nasm"
 %include "macro/negate_if_flag.nasm"
 %include "macro/return_mismatch_or_null.nasm"
