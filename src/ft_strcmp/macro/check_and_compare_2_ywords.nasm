@@ -11,8 +11,8 @@
 ; Optional parameters
 ; %3: the offset to apply.
 %macro CHECK_AND_COMPARE_2_YWORDS 2-3
-%define          S0 %1
-%define          S1 %2
+%define S0 %1
+%define S1 %2
 %if %0 > 2
 %define OFFSET %3
 %else
