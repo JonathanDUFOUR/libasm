@@ -83,12 +83,13 @@ loop_prologue:
 	jc less_than_4_ywords_before_S1_crosses_page_boundary.before_loop
 ; calculate how far S1 is from its previous 4-yword boundary
 	and r9d, YWORD_SIZE * 4 - 1
+; calculate the offset between S1 and S0
+	sub rsi, rdi
 align 16
 checked_loop:
-	CHECK_AND_COMPARE_4_YWORDS rdi, rsi
+	CHECK_AND_COMPARE_4_YWORDS rdi, rdi + rsi, mismatch_or_null.restore_S1_pointer
 ; advance both S0 and S1 to their respective next 4 ywords
 	add rdi, YWORD_SIZE * 4
-	add rsi, YWORD_SIZE * 4
 ; update the distance between S1 and its next page boundary
 	sub eax, YWORD_SIZE * 4
 ; check if S1 is less than 4 ywords away from its next page boundary
@@ -100,13 +101,11 @@ checked_loop:
 less_than_4_ywords_before_S1_crosses_page_boundary:
 align 16
 .during_loop:
-; retreat S1 to its previous 4-yword boundary + adjust S0 accordingly
+; adjust S0 to the last 4-yword boundary of the current S1 page
 	sub rdi, r9
-	sub rsi, r9
-	CHECK_AND_COMPARE_4_YWORDS rsi, rdi
-; restore both S0 and S1 pointers
+	CHECK_AND_COMPARE_4_YWORDS rdi + rsi, rdi, mismatch_or_null.restore_S1_pointer
+; restore the S0 pointer
 	add rdi, r9
-	add rsi, r9
 ; update the distance between S1 and its next page boundary
 	add eax, PAGE_SIZE
 	jmp checked_loop
@@ -132,6 +131,8 @@ align 16
 	and r9d, YWORD_SIZE * 4 - 1
 ; update the distance between S1 and its next page boundary
 	add eax, PAGE_SIZE
+; calculate the offset between S1 and S0
+	sub rsi, rdi
 	jmp checked_loop
 
 align 16
@@ -157,6 +158,8 @@ less_than_2_ywords_before_S1_crosses_page_boundary:
 	and r9d, YWORD_SIZE * 4 - 1
 ; update the distance between S1 and its next page boundary
 	add eax, PAGE_SIZE
+; calculate the offset between S1 and S0
+	sub rsi, rdi
 	jmp checked_loop
 
 align 16
@@ -185,11 +188,13 @@ less_than_1_yword_before_S1_crosses_page_boundary:
 	add r9d, YWORD_SIZE * 3
 ; update the distance between S1 and its next page boundary
 	add eax, PAGE_SIZE
+; calculate the offset between S1 and S0
+	sub rsi, rdi
 	jmp checked_loop
 
 align 16
 unchecked_loop:
-	CHECK_AND_COMPARE_4_YWORDS rdi, rsi
+	CHECK_AND_COMPARE_4_YWORDS rdi, rsi, mismatch_or_null.in_00_7F
 ; advance both S0 and S1 to their respective next 4 ywords
 	add rdi, YWORD_SIZE * 4
 	add rsi, YWORD_SIZE * 4
@@ -213,6 +218,9 @@ align 16
 .in_4th_yword_from_start:
 	RETURN_MISMATCH_OR_NULL ecx, 0x60
 
+align 16
+.restore_S1_pointer:
+	add rsi, rdi
 align 16
 .in_00_7F:
 	JCC_YMM_HAS_NULL_BYTE jnz, .in_00_3F, MASK_00_3F, edx
