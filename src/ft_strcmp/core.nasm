@@ -62,27 +62,24 @@ check_first_4_ywords_from_start_one_by_one:
 	xor INVERSION_FLAG, INVERSION_FLAG
 align 16
 loop_prologue:
-; calculate the offset between S1 and S0
+; align S0 to its next 4-yword boundary + adjust S1 accordingly
 	sub rsi, rdi
-; align S0 to its next 4-yword boundary
 	and rdi, -YWORD_SIZE * 4
 	add rdi,  YWORD_SIZE * 4
-; restore the S1 pointer
 	add rsi, rdi
 ; check if S1 is aligned to a 4-yword boundary
-	test rsi, YWORD_SIZE * 4 - 1
+	test esi, YWORD_SIZE * 4 - 1
 	jz unchecked_loop
-; copy the S1 address for later distance calculations
-	mov r9d, esi
 ; calculate how far S1 is from its next page boundary
 	mov eax, esi
 	neg eax
 	and eax, PAGE_SIZE - 1
+; calculate how far S1 is from its previous 4-yword boundary
+	mov r9d, esi
+	and r9d, YWORD_SIZE * 4 - 1
 ; check if S1 is less than 4 ywords away from its next page boundary
 	sub eax, YWORD_SIZE * 4
-	jc less_than_4_ywords_before_S1_crosses_page_boundary.before_loop
-; calculate how far S1 is from its previous 4-yword boundary
-	and r9d, YWORD_SIZE * 4 - 1
+	jc less_than_4_ywords_before_S1_crosses_page_boundary
 ; calculate the offset between S1 and S0
 	sub rsi, rdi
 align 16
@@ -92,15 +89,9 @@ checked_loop:
 	add rdi, YWORD_SIZE * 4
 ; update the distance between S1 and its next page boundary
 	sub eax, YWORD_SIZE * 4
-; check if S1 is less than 4 ywords away from its next page boundary
-	jc less_than_4_ywords_before_S1_crosses_page_boundary.during_loop
 ; repeat until either there is a (mismatching|null) byte in the next 4 ywords
 ; or S1 is less than 4 ywords away from its next page boundary
-	jmp checked_loop
-
-less_than_4_ywords_before_S1_crosses_page_boundary:
-align 16
-.during_loop:
+	jnc checked_loop
 ; adjust S0 to the last 4-yword boundary of the current S1 page
 	sub rdi, r9
 	CHECK_AND_COMPARE_4_YWORDS rdi + rsi, rdi, mismatch_or_null.restore_S1_pointer
@@ -108,31 +99,27 @@ align 16
 	add rdi, r9
 ; update the distance between S1 and its next page boundary
 	add eax, PAGE_SIZE
+; repeat until there is a (mismatching|null) byte in the next 4 ywords
 	jmp checked_loop
 
 align 16
-.before_loop:
+less_than_4_ywords_before_S1_crosses_page_boundary:
 ; check if S1 is at least 2 ywords away from its next page boundary
 	cmp eax, -YWORD_SIZE * 2
 	jl less_than_2_ywords_before_S1_crosses_page_boundary
 	CHECK_AND_COMPARE_2_YWORDS rdi, rsi
-; calculate how far S1 is from its (current|next) 2-yword boundary
-	neg r9d
-	and r9d, YWORD_SIZE * 2 - 1
-; advance S1 to its (current|next) 2-yword boundary + adjust S0 accordingly
-	add rdi, r9
-	add rsi, r9
-	CHECK_AND_COMPARE_2_YWORDS rsi, rdi
-; restore both S0 and S1 pointers
+; advance S1 to the last 2-yword boundary of its current page + adjust S0 accordingly
 	sub rdi, r9
+	add rdi, YWORD_SIZE * 2
 	sub rsi, r9
-; calculate how far S1 is from its previous 4-yword boundary
-	mov r9d, esi
-	and r9d, YWORD_SIZE * 4 - 1
-; update the distance between S1 and its next page boundary
-	add eax, PAGE_SIZE
+	add rsi, YWORD_SIZE * 2
+	CHECK_AND_COMPARE_2_YWORDS rsi, rdi
 ; calculate the offset between S1 and S0
 	sub rsi, rdi
+; align S0 to its previous 4-yword boundary
+	and rdi, -YWORD_SIZE * 4
+; update the distance between S1 and its next page boundary
+	add eax, PAGE_SIZE
 	jmp checked_loop
 
 align 16
@@ -142,54 +129,47 @@ less_than_2_ywords_before_S1_crosses_page_boundary:
 	jl less_than_1_yword_before_S1_crosses_page_boundary
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rdi, rsi
 	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F, MASK_00_1F, ecx
-; calculate how far S1 is from its (current|next) yword boundary
-	neg r9d
-	and r9d, YWORD_SIZE - 1
-; advance S1 to its (current|next) yword boundary + adjust S0 accordingly
-	add rdi, r9
-	add rsi, r9
+; advance S1 to the last yword boundary of its current page + adjust S0 accordingly
+	sub rdi, r9
+	add rdi, YWORD_SIZE * 3
+	sub rsi, r9
+	add rsi, YWORD_SIZE * 3
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rsi, rdi
 	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F, MASK_00_1F, ecx
-; restore both S0 and S1 pointers
-	sub rdi, r9
-	sub rsi, r9
-; calculate how far S1 is from its previous 4-yword boundary
-	mov r9d, esi
-	and r9d, YWORD_SIZE * 4 - 1
-; update the distance between S1 and its next page boundary
-	add eax, PAGE_SIZE
 ; calculate the offset between S1 and S0
 	sub rsi, rdi
+; align S0 to its previous 4-yword boundary
+	and rdi, -YWORD_SIZE * 4
+; update the distance between S1 and its next page boundary
+	add eax, PAGE_SIZE
 	jmp checked_loop
 
 align 16
 less_than_1_yword_before_S1_crosses_page_boundary:
-; calculate how far S1 is from its previous yword boundary
-	and r9d, YWORD_SIZE - 1
 ; prepare the bitmask to ignore the unwanted leading bytes
-	mov r10d, 0xFFFFFFFF
-	shlx r10d, r10d, r9d
-	not r10d
-; retreat S1 to its previous yword boundary + adjust S0 accordingly
+	mov edx, 0xFFFFFFFF
+	shlx edx, edx, esi
+	not edx
+; retreat S1 to the last yword boundary of its current page + adjust S0 accordingly
 	sub rdi, r9
+	add rdi, YWORD_SIZE * 3
 	sub rsi, r9
+	add rsi, YWORD_SIZE * 3
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rsi, rdi
 ; extract the bitmask of the next yword
 	vpmovmskb ecx, MASK_00_1F
 ; ignore the unwanted leading bytes
-	or ecx, r10d
+	or ecx, edx
 ; check if there is a (mismatching|null) byte
 	inc ecx
 	jnz mismatch_or_null.in_00_1F
-; restore both S0 and S1 pointers
-	add rdi, r9
-	add rsi, r9
-; calculate how far S1 is from its previous 4-yword boundary
-	add r9d, YWORD_SIZE * 3
-; update the distance between S1 and its next page boundary
-	add eax, PAGE_SIZE
 ; calculate the offset between S1 and S0
 	sub rsi, rdi
+; align S0 to its next 4-yword boundary
+	and rdi, -YWORD_SIZE * 4
+	add rdi,  YWORD_SIZE * 4
+; update the distance between S1 and its next page boundary
+	add eax, PAGE_SIZE
 	jmp checked_loop
 
 align 16
