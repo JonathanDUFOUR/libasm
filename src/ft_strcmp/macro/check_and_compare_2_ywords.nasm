@@ -1,8 +1,7 @@
 %ifndef CHECK_AND_COMPARE_2_YWORDS_NASM
 %define CHECK_AND_COMPARE_2_YWORDS_NASM
 
-%include "macro/jcc_ymm_mask_has_null_byte.nasm"
-%include "macro/jcc_ymm_has_null_byte.nasm"
+%include "macro/jump_if_ymm_has_null_byte.nasm"
 
 ; Parameters
 ; %1: the address of the 1st string to compare. (assumed to be a valid address)
@@ -33,7 +32,7 @@
 	vpand MASK_20_3F, YMM_20_3F, DIFF_MASK_20_3F
 	vpminub MASK_00_3F, MASK_00_1F, MASK_20_3F
 ; check if there is a (mismatching|null) byte
-	JCC_YMM_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_3F, MASK_00_3F, edx
+	JUMP_IF_YMM_HAS_NULL_BYTE mismatch_or_null.in_00_3F, MASK_00_3F, edx
 %endmacro
 
 %endif

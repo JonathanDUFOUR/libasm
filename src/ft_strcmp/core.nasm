@@ -15,8 +15,8 @@ ALIGNMODE p6
 %include "macro/check_and_compare_1_yword.nasm"
 %include "macro/check_and_compare_2_ywords.nasm"
 %include "macro/check_and_compare_4_ywords.nasm"
-%include "macro/jcc_ymm_has_null_byte.nasm"
 %include "macro/jcc_ymm_mask_has_null_byte.nasm"
+%include "macro/jump_if_ymm_has_null_byte.nasm"
 %include "macro/negate_if_flag.nasm"
 %include "macro/return_mismatch_or_null.nasm"
 %include "macro/return_mismatch_or_null_maybe_inverted.nasm"
@@ -48,16 +48,16 @@ align 16
 check_first_4_ywords_from_start_one_by_one:
 ; first yword from start
 	CHECK_AND_COMPARE_1_YWORD vmovdqu, rdi, rsi, 0x00
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_1st_yword_from_start, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_1st_yword_from_start
 ; second yword from start
 	CHECK_AND_COMPARE_1_YWORD vmovdqu, rdi, rsi, 0x20
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_2nd_yword_from_start, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_2nd_yword_from_start
 ; third yword from start
 	CHECK_AND_COMPARE_1_YWORD vmovdqu, rdi, rsi, 0x40
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_3rd_yword_from_start, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_3rd_yword_from_start
 ; fourth yword from start
 	CHECK_AND_COMPARE_1_YWORD vmovdqu, rdi, rsi, 0x60
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_4th_yword_from_start, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_4th_yword_from_start
 ; clear the inversion flag
 	xor INVERSION_FLAG, INVERSION_FLAG
 align 16
@@ -128,14 +128,14 @@ less_than_2_ywords_before_S1_crosses_page_boundary:
 	cmp eax, -YWORD_SIZE * 3
 	jl less_than_1_yword_before_S1_crosses_page_boundary
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rdi, rsi
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F
 ; advance S1 to the last yword boundary of its current page + adjust S0 accordingly
 	sub rdi, r9
 	add rdi, YWORD_SIZE * 3
 	sub rsi, r9
 	add rsi, YWORD_SIZE * 3
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rsi, rdi
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null.in_00_1F
 ; calculate the offset between S1 and S0
 	sub rsi, rdi
 ; align S0 to its previous 4-yword boundary
@@ -184,44 +184,44 @@ unchecked_loop:
 mismatch_or_null:
 align 16
 .in_1st_yword_from_start:
-	RETURN_MISMATCH_OR_NULL ecx, 0x00
+	RETURN_MISMATCH_OR_NULL 0x00
 
 align 16
 .in_2nd_yword_from_start:
-	RETURN_MISMATCH_OR_NULL ecx, 0x20
+	RETURN_MISMATCH_OR_NULL 0x20
 
 align 16
 .in_3rd_yword_from_start:
-	RETURN_MISMATCH_OR_NULL ecx, 0x40
+	RETURN_MISMATCH_OR_NULL 0x40
 
 align 16
 .in_4th_yword_from_start:
-	RETURN_MISMATCH_OR_NULL ecx, 0x60
+	RETURN_MISMATCH_OR_NULL 0x60
 
 align 16
 .restore_S1_pointer:
 	add rsi, rdi
 align 16
 .in_00_7F:
-	JCC_YMM_HAS_NULL_BYTE jnz, .in_00_3F, MASK_00_3F, edx
+	JUMP_IF_YMM_HAS_NULL_BYTE .in_00_3F, MASK_00_3F, edx
 ;in_40_7F:
-	JCC_YMM_HAS_NULL_BYTE jnz, .in_40_5F, MASK_40_5F, edx
+	JUMP_IF_YMM_HAS_NULL_BYTE .in_40_5F, MASK_40_5F, edx
 ;in_60_7F:
 	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED ecx, 0x60
 
 align 16
+.in_40_5F:
+	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED edx, 0x40
+
+align 16
 .in_00_3F:
-	JCC_YMM_HAS_NULL_BYTE jnz, .in_00_1F, MASK_00_1F, ecx
+	JUMP_IF_YMM_HAS_NULL_BYTE .in_00_1F, MASK_00_1F, ecx
 ;in_20_3F:
 	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED edx, 0x20
 
 align 16
 .in_00_1F:
 	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED ecx, 0x00
-
-align 16
-.in_40_5F:
-	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED edx, 0x40
 
 align 16
 maybe_less_than_4_ywords_before_either_S0_or_S1_crosses_page_boundary:
@@ -249,7 +249,7 @@ maybe_less_than_4_ywords_before_either_S0_or_S1_crosses_page_boundary:
 align 16
 at_least_1_yword_before_S0_crosses_page_boundary:
 	CHECK_AND_COMPARE_1_YWORD vmovdqu, rdi, rsi, rdx
-	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null_at_edx, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jnz, mismatch_or_null_at_edx
 ; advance to the next yword of both S0 and S1
 	add edx, YWORD_SIZE
 ; update the distance between S0 and its next page boundary
@@ -260,7 +260,7 @@ at_least_1_yword_before_S0_crosses_page_boundary:
 ; set the offset to the last yword of the current S0 page
 	sub edx, eax
 	CHECK_AND_COMPARE_1_YWORD vmovdqa, rdi, rsi, rdx
-	JCC_YMM_MASK_HAS_NULL_BYTE jz, loop_prologue, MASK_00_1F, ecx
+	JCC_YMM_MASK_HAS_NULL_BYTE jz, loop_prologue
 align 16
 mismatch_or_null_at_edx:
 	RETURN_MISMATCH_OR_NULL_MAYBE_INVERTED ecx, edx

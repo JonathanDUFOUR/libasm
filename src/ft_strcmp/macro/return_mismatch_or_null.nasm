@@ -5,12 +5,10 @@
 %include "macro/vzeroupper_ret.nasm"
 
 ; Parameters
-; %1: the mask register from which to calculate the index of the first (mismatching|null) byte.
-; %2: the offset to apply
-%macro RETURN_MISMATCH_OR_NULL 2
-%define GPR_MASK %1
-%define   OFFSET %2
-	CALCULATE_DIFF_AT_FIRST_MISMATCH_OR_NULL GPR_MASK, OFFSET
+; %1: the offset to apply
+%macro RETURN_MISMATCH_OR_NULL 1
+%define OFFSET %1
+	CALCULATE_DIFF_AT_FIRST_MISMATCH_OR_NULL ecx, OFFSET
 	VZEROUPPER_RET
 %endmacro
 
