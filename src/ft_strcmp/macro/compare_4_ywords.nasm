@@ -1,5 +1,5 @@
-%ifndef CHECK_AND_COMPARE_4_YWORDS_NASM
-%define CHECK_AND_COMPARE_4_YWORDS_NASM
+%ifndef COMPARE_4_YWORDS_NASM
+%define COMPARE_4_YWORDS_NASM
 
 %include "macro/jump_if_ymm_has_null_byte.nasm"
 
@@ -10,7 +10,7 @@
 ;
 ; Optional parameters
 ; %4: the offset to apply.
-%macro CHECK_AND_COMPARE_4_YWORDS 3-4
+%macro COMPARE_4_YWORDS 3-4
 %define                     S0 %1
 %define                     S1 %2
 %define MISMATCH_OR_NULL_LABEL %3

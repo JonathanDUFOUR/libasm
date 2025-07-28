@@ -1,5 +1,5 @@
-%ifndef CHECK_AND_COMPARE_1_YWORD_NASM
-%define CHECK_AND_COMPARE_1_YWORD_NASM
+%ifndef COMPARE_1_YWORD_NASM
+%define COMPARE_1_YWORD_NASM
 
 ; Parameters
 ; %1: vmovdqa(a|u).
@@ -8,7 +8,7 @@
 ;
 ; Optional parameters
 ; %4: the offset to apply.
-%macro CHECK_AND_COMPARE_1_YWORD 3-4
+%macro COMPARE_1_YWORD 3-4
 %define        LOAD %1
 %define          S0 %2
 %define          S1 %3
