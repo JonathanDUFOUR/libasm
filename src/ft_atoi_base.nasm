@@ -28,8 +28,7 @@ ALIGNMODE p6
 section .text align=16
 ; Parses a string into an integer, using a custom base.
 ; The base must be at least 2 characters long. It must not contain
-; any duplicate characters, nor any of the following:
-; `%x09-0D / %x20 / %x2B / %x2D`
+; any duplicate characters, nor any of the following: `[\x09-\x0D +-]`
 ;
 ; Parameters
 ; rdi: the address of the string to parse. (assumed to be a valid address)
@@ -41,8 +40,9 @@ section .text align=16
 ; - 0 otherwise.
 ft_atoi_base:
 %define DIGIT_ARRAY_SIZE BYTE_SIZE * 256
-; preserve the stack pointer and align it to its previous yword boundary
+; preserve the stack pointer
 	mov rdx, rsp
+; align the stack pointer to its previous yword boundary
 	and rsp, -YWORD_SIZE
 ; reserve space for the local constants/variables
 	sub rsp, DIGIT_ARRAY_SIZE
