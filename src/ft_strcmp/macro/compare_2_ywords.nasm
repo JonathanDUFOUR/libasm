@@ -1,21 +1,17 @@
 %ifndef COMPARE_2_YWORDS_NASM
 %define COMPARE_2_YWORDS_NASM
 
-%include "macro/jump_if_ymm_has_null_byte.nasm"
-
 ; Parameters
 ; %1: the address of the 1st string to compare. (assumed to be a valid address)
 ; %2: the address of the 2nd string to compare. (assumed to be a valid address)
-; %3: the label to jump to if there is a (mismatching|null) byte.
 ;
 ; Optional parameters
-; %4: the offset to apply.
-%macro COMPARE_2_YWORDS 3-4
-%define                     S0 %1
-%define                     S1 %2
-%define MISMATCH_OR_NULL_LABEL %3
-%if %0 > 3
-%define OFFSET %4
+; %3: the offset to apply.
+%macro COMPARE_2_YWORDS 2-3
+%define S0 %1
+%define S1 %2
+%if %0 > 2
+%define OFFSET %3
 %else
 %define OFFSET 0
 %endif
@@ -33,8 +29,6 @@
 	vpand MASK_00_1F, YMM_00_1F, DIFF_MASK_00_1F
 	vpand MASK_20_3F, YMM_20_3F, DIFF_MASK_20_3F
 	vpminub MASK_00_3F, MASK_00_1F, MASK_20_3F
-; check if there is a (mismatching|null) byte
-	JUMP_IF_YMM_HAS_NULL_BYTE MISMATCH_OR_NULL_LABEL, MASK_00_3F, edx
 %endmacro
 
 %endif

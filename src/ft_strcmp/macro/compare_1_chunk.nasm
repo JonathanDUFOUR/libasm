@@ -18,7 +18,7 @@
 %else
 %define OFFSET 0
 %endif
-;                            ┌──NULL_OWORD
+;                            ┌──NULL_XMM
 ;         ┌──NOT──xmm1──CMPEQB
 ; xmm1──AND                  ├──xmm1──[S0+OFFSET]
 ;         └───────xmm2──CMPEQB
@@ -26,7 +26,7 @@
 	LOAD xmm1, [ rdi + OFFSET ]
 	LOAD xmm2, [ rsi + OFFSET ]
 	vpcmpeqb xmm2, xmm1, xmm2
-	vpcmpeqb xmm1, xmm1, NULL_OWORD
+	vpcmpeqb xmm1, xmm1, NULL_XMM
 	vpandn xmm1, xmm1, xmm2
 ; check if there is a (mismatching|null) byte
 	vpmovmskb ecx, xmm1

@@ -17,14 +17,14 @@
 %else
 %define OFFSET 0
 %endif
-;                                             ┌──NULL_YWORD
+;                                             ┌──NULL_YMM
 ;               ┌──not──NULL_MASK_00_1F──cmpeqb
 ; MASK_00_1F──and                             ├──YMM_00_1F──[S0_00_1F]
 ;               └───────DIFF_MASK_00_1F──cmpeqb
 ;                                             └─────────────[S1_00_1F]
 	LOAD YMM_00_1F, [ S0 + OFFSET + 0x00 ]
 	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFFSET + 0x00 ]
-	vpcmpeqb NULL_MASK_00_1F, YMM_00_1F, NULL_YWORD
+	vpcmpeqb NULL_MASK_00_1F, YMM_00_1F, NULL_YMM
 	vpandn MASK_00_1F, NULL_MASK_00_1F, DIFF_MASK_00_1F
 %endmacro
 

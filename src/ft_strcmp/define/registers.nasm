@@ -3,8 +3,8 @@
 
 %define INVERSION_FLAG r8d
 
-%define NULL_YWORD ymm0
-%define NULL_OWORD xmm0
+%define NULL_YMM ymm0
+%define NULL_XMM xmm0
 
 %define       YMM_00_1F ymm1
 %define       YMM_20_3F ymm2
