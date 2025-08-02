@@ -11,12 +11,10 @@
 %macro JCC_NULL_BYTE_IN_YMM 4
 %ifidni %1, None
 %define JCC jz
-%else
-%ifidni %1, Some
+%elifidni %1, Some
 %define JCC jnz
 %else
 %error "Accepted values for %1: (None|Some)"
-%endif
 %endif
 %define TARGET %2
 %define    YMM %3
