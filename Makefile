@@ -6,7 +6,7 @@
 #    By: jodufour <jodufour@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/12/27 00:40:53 by jodufour          #+#    #+#              #
-#    Updated: 2025/07/29 19:08:54 by jodufour         ###   ########.fr        #
+#    Updated: 2025/08/02 07:21:38 by jodufour         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,10 +38,10 @@ SRC := \
 	${addsuffix .nasm, \
 		${addprefix ft_, \
 			${addsuffix /core, \
+				memcmp \
 				strlen \
 				strcmp \
 			} \
-			memcmp \
 			memcpy \
 			read \
 			strcpy \
