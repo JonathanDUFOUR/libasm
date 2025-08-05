@@ -11,9 +11,9 @@
 %define S0 %1
 %define S1 %2
 %if %0 > 2
-%define OFFSET %3
+%define OFS %3
 %else
-%define OFFSET 0
+%define OFS 0
 %endif
 ;                                                     ┌────────────────────────┬──YMM_00_1F──[S0_00_1F]
 ;                                    ┌──MASK_00_1F──and                        │
@@ -30,14 +30,14 @@
 ;                                    │                ┌────────────────────────┬──YMM_60_7F──[S0_60_7F]
 ;                                    └──MASK_60_7F──and                        │
 ;                                                     └──DIFF_MASK_60_7F──cmpeqb─────────────[S1_60_7F]
-	vmovdqa YMM_00_1F, [ S0 + OFFSET + 0x00 ]
-	vmovdqa YMM_20_3F, [ S0 + OFFSET + 0x20 ]
-	vmovdqa YMM_40_5F, [ S0 + OFFSET + 0x40 ]
-	vmovdqa YMM_60_7F, [ S0 + OFFSET + 0x60 ]
-	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFFSET + 0x00 ]
-	vpcmpeqb DIFF_MASK_20_3F, YMM_20_3F, [ S1 + OFFSET + 0x20 ]
-	vpcmpeqb DIFF_MASK_40_5F, YMM_40_5F, [ S1 + OFFSET + 0x40 ]
-	vpcmpeqb DIFF_MASK_60_7F, YMM_60_7F, [ S1 + OFFSET + 0x60 ]
+	vmovdqa YMM_00_1F, [ S0 + OFS + 0x00 ]
+	vmovdqa YMM_20_3F, [ S0 + OFS + 0x20 ]
+	vmovdqa YMM_40_5F, [ S0 + OFS + 0x40 ]
+	vmovdqa YMM_60_7F, [ S0 + OFS + 0x60 ]
+	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFS + 0x00 ]
+	vpcmpeqb DIFF_MASK_20_3F, YMM_20_3F, [ S1 + OFS + 0x20 ]
+	vpcmpeqb DIFF_MASK_40_5F, YMM_40_5F, [ S1 + OFS + 0x40 ]
+	vpcmpeqb DIFF_MASK_60_7F, YMM_60_7F, [ S1 + OFS + 0x60 ]
 	vpand MASK_00_1F, YMM_00_1F, DIFF_MASK_00_1F
 	vpand MASK_20_3F, YMM_20_3F, DIFF_MASK_20_3F
 	vpand MASK_40_5F, YMM_40_5F, DIFF_MASK_40_5F

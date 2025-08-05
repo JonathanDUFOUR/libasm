@@ -11,17 +11,17 @@
 %macro COMPARE_1_OWORD 1-2
 %define LOAD %1
 %if %0 > 1
-%define OFFSET %2
+%define OFS %2
 %else
-%define OFFSET 0
+%define OFS 0
 %endif
 ;                            ┌──NULL_XMM
 ;         ┌──NOT──xmm1──CMPEQB
-; xmm1──AND                  ├──xmm1──[S0+OFFSET]
+; xmm1──AND                  ├──xmm1──[S0+OFS]
 ;         └───────xmm2──CMPEQB
-;                            └────────[S1+OFFSET]
-	LOAD xmm1, [ rdi + OFFSET ]
-	vpcmpeqb xmm2, xmm1, [ rsi + OFFSET ]
+;                            └────────[S1+OFS]
+	LOAD xmm1, [ rdi + OFS ]
+	vpcmpeqb xmm2, xmm1, [ rsi + OFS ]
 	vpcmpeqb xmm1, xmm1, NULL_XMM
 	vpandn xmm1, xmm1, xmm2
 ; check if there is a (mismatching|null) byte

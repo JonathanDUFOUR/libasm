@@ -9,21 +9,21 @@
 ; Optional parameters
 ; %4: the offset to apply.
 %macro COMPARE_1_YWORD 3-4
-%define        LOAD %1
-%define          S0 %2
-%define          S1 %3
+%define LOAD %1
+%define   S0 %2
+%define   S1 %3
 %if %0 > 3
-%define OFFSET %4
+%define OFS %4
 %else
-%define OFFSET 0
+%define OFS 0
 %endif
 ;                                             ┌──NULL_YMM
 ;               ┌──not──NULL_MASK_00_1F──cmpeqb
 ; MASK_00_1F──and                             ├──YMM_00_1F──[S0_00_1F]
 ;               └───────DIFF_MASK_00_1F──cmpeqb
 ;                                             └─────────────[S1_00_1F]
-	LOAD YMM_00_1F, [ S0 + OFFSET + 0x00 ]
-	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFFSET + 0x00 ]
+	LOAD YMM_00_1F, [ S0 + OFS + 0x00 ]
+	vpcmpeqb DIFF_MASK_00_1F, YMM_00_1F, [ S1 + OFS + 0x00 ]
 	vpcmpeqb NULL_MASK_00_1F, YMM_00_1F, NULL_YMM
 	vpandn MASK_00_1F, NULL_MASK_00_1F, DIFF_MASK_00_1F
 %endmacro

@@ -7,8 +7,8 @@
 ; Parameters
 ; %1: the offset to apply
 %macro RETURN_MISMATCH_OR_NULL 1
-%define OFFSET %1
-	CALCULATE_DIFF_AT_FIRST_MISMATCH_OR_NULL ecx, OFFSET
+%define OFS %1
+	CALCULATE_DIFF_AT_FIRST_MISMATCH_OR_NULL ecx, OFS
 	VZEROUPPER_RET
 %endmacro
 
