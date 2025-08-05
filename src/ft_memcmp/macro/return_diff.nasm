@@ -1,22 +1,22 @@
 %ifndef RETURN_DIFF_NASM
 %define RETURN_DIFF_NASM
 
+%include "macro/vzeroupper_ret.nasm"
+
 ; Parameters
-; %1: how far the yword that contains the first mismatching byte is from S0 and S1.
-; %2: the register in which the comparison bitmask is.
+; %1: the 32-bit general purpose register in which the comparison bitmask is.
+; %2: how far the yword that contains the first mismatching byte is from S0 and S1.
 %macro RETURN_DIFF 2
-%define  OFFSET %1
-%define BITMASK %2
+%define DMASK %1
+%define   OFS %2
 ; calculate the index of the first mismatching byte
-	bsf ecx, BITMASK
+	bsf ecx, DMASK
 ; load the first mismatching byte from both S0 and S1
-	movzx eax, byte [ rdi + OFFSET + rcx ]
-	movzx ecx, byte [ rsi + OFFSET + rcx ]
+	movzx eax, byte [ rdi + OFS + rcx ]
+	movzx ecx, byte [ rsi + OFS + rcx ]
 ; return the difference between the two bytes
 	sub eax, ecx
-; clear the upper bits of the YMM registers to avoid performance penalties
-	vzeroupper
-	ret
+	VZEROUPPER_RET
 %endmacro
 
 %endif
