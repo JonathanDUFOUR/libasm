@@ -64,15 +64,6 @@ ft_memcmp:
 ; check if 4 ywords or less remain to be compared
 	sub rdx, YWORD_SIZE * 4
 	jbe compare_last_4_ywords
-; compare the fifth, sixth, seventh, and eighth ywords of both S0 and S1
-	COMPARE_N_YWORDS 4, vmovdqu, rdi, rsi
-	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_00_7F, MASK_00_7F, eax
-; advance both S0 and S1 to their respective ninth yword
-	add rdi, YWORD_SIZE * 4
-	add rsi, YWORD_SIZE * 4
-; check if 8 ywords or less remain to be compared
-	sub rdx, YWORD_SIZE * 8
-	jbe compare_last_8_ywords
 ; align S0 to its previous yword boundary + adjust S1 accordingly + update N accordingly
 	mov rcx, rdi
 	sub rsi, rdi
@@ -80,46 +71,19 @@ ft_memcmp:
 	add rsi, rdi
 	sub rcx, rdi
 	add rdx, rcx
-align CACHE_LINE_SIZE
-compare_next_8_ywords:
-	COMPARE_N_YWORDS 8, vmovdqa, rdi, rsi
-	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_00_FF, MASK_00_FF, ecx
-; advance both S0 and S1 + update N
-	add rdi, YWORD_SIZE * 8
-	add rsi, YWORD_SIZE * 8
-	sub rdx, YWORD_SIZE * 8
-; repeat until either there is a mismatch in the next 8 ywords
-; or 8 ywords or less remain to be compared
-	ja compare_next_8_ywords
-compare_last_8_ywords:
-	COMPARE_N_YWORDS 8, vmovdqu, rdi, rsi, rdx
-	JCC_NULL_BYTE_IN_YMASK None, vzeroupper_ret, MASK_00_FF, ecx
-	add rdi, rdx
-	add rsi, rdx
-mismatch_in_00_FF:
+	jmp compare_next_4_ywords
+
+align CACHE_LINE_SIZE, int3
+compare_next_4_ywords:
+	COMPARE_N_YWORDS 4, vmovdqa, rdi, rsi
 	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_00_7F, MASK_00_7F, eax
-;mismatch_in_80_FF:
-	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_80_BF, MASK_80_BF, eax
-;mismatch_in_C0_FF:
-	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_C0_DF, MASK_C0_DF, eax
-;mismatch_in_E0_FF:
-	RETURN_DIFF ecx, 0xE0
-
-align 16, int3
-mismatch_in_C0_DF:
-	RETURN_DIFF eax, 0xC0
-
-align 16, int3
-mismatch_in_80_BF:
-	JCC_NULL_BYTE_IN_YMASK Some, mismatch_in_80_9F, MASK_80_9F, ecx
-;mismatch_in_A0_BF:
-	RETURN_DIFF eax, 0xA0
-
-align 16, int3
-mismatch_in_80_9F:
-	RETURN_DIFF ecx, 0x80
-
-align 16, int3
+; advance both S0 and S1 + update N
+	sub rdi, -YWORD_SIZE * 4
+	sub rsi, -YWORD_SIZE * 4
+	add rdx, -YWORD_SIZE * 4
+; repeat until either there is a mismatch in the next 4 ywords
+; or 4 ywords or less remain to be compared
+	jbe compare_next_4_ywords
 compare_last_4_ywords:
 	COMPARE_N_YWORDS 4, vmovdqu, rdi, rsi, rdx
 	JCC_NULL_BYTE_IN_YMASK None, vzeroupper_ret, MASK_00_7F, eax
